@@ -1,0 +1,27 @@
+"CombineControl"
+{
+	"base"		"base"
+	"title"		"CombineControl"
+	"maps"		""
+	"menusystem"	"1"
+
+	"settings"
+	{
+		1
+		{
+			"name"		"cc_damage_multiplier"
+			"text"		"Damage Multiplier"
+			"help"		""
+			"type"		"Numeric"
+			"default"	"1"
+		}
+		2
+		{
+			"name"		"cc_max_combine"
+			"text"		"Combine Limit"
+			"help"		""
+			"type"		"Numeric"
+			"default"	"20"
+		}
+	}
+}
