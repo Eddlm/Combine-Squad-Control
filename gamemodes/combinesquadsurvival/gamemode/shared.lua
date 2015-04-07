@@ -41,8 +41,12 @@ function ISaid( ply, text, public )
 		SpawnCombinePrisonGuard(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
 		return false
 	end
-	
-
+if IsMounted('ep2') then
+    if text == "!hunter" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
+		SpawnHunter(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
+		return false
+	end	
+end
 if GetConVarNumber("cc_extra_beta_npcs") == 1 then
     if text == "!assassin" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
 		SpawnCombineAssasin(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
@@ -152,3 +156,13 @@ CombineChat_Idle = {"npc/combine_soldier/vo/sightlineisclear.wav","npc/combine_s
 CombineChat_Select = {"npc/combine_soldier/vo/readyweapons.wav"}
 
 CombineChat_Go={"npc/metropolice/vo/keepmoving.wav","npc/combine_soldier/vo/gosharpgosharp.wav","npc/combine_soldier/vo/movein.wav","npc/combine_soldier/vo/unitisinbound.wav","npc/combine_soldier/vo/gosharp.wav"}
+
+
+
+if IsMounted("ep1") or IsMounted("ep2") then
+
+
+
+table.insert(Zombies, "npc_zombine")
+
+end

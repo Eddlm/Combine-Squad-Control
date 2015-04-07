@@ -622,13 +622,16 @@ elseif entity:IsNPC() then
 	if entity:GetClass() == "npc_fastzombie" then entity:SetName("Fast Zombie") end
 	if entity:GetClass() == "npc_headcrab_black" then entity:SetName("Poison Headcrab") end
 	if entity:GetClass() == "npc_poisonzombie" then entity:SetName("Poison Zombie") end
-	if entity:GetClass() == "npc_antlion" then entity:SetName("Antlion") end
+	if entity:GetClass() == "npc_antlion" then entity:SetName("Antlion") 
+	if IsMounted("ep1") or IsMounted("ep2")then if math.random(1,2) == 1 then entity:SetKeyValue( "spawnflags", 262144 )  end end end
 	if entity:GetClass() == "npc_antlionguard" then entity:SetName("Antlion Guard") end
 	if entity:GetClass() == "npc_headcrab" then entity:SetName("Headcrab") end
 	local randompl = table.Random(ents.FindByClass("player"))
 	entity:AddRelationship( "player D_HT 1" )
 	entity:SetCollisionGroup(3)
 	entity:AddRelationship( "npc_combine_s D_HT 20" )
+	entity:AddRelationship( "npc_hunter D_HT 20" )
+
 	end
 end
 
@@ -724,6 +727,26 @@ function SpawnBasicNPC( pos,npc )
 end
 
 
+function SpawnHunter( pos,owner )
+	NPC = ents.Create( "npc_hunter" )
+	NPC:SetPos( pos )
+	NPC:SetKeyValue( "spawnflags", 512+256 )
+	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
+	NPC:Spawn()
+
+	NPC:SetCurrentWeaponProficiency( WEAPON_PROFICIENCY_PERFECT )
+	NPC:SetNWString("owner",""..owner.."")
+	NPC:SetNWString("selected","0")
+	NPC:SetNWVector("HoldPosition","NO_VECTOR")
+	NPC:SetNWString("FollowMe", "no")
+	NPC:SetNWString("Squad", "no")
+	NPC:SetKeyValue("squadname", "Combine")
+	NPC:SetNWString("name","Hunter")
+	NPC:SetName("Hunter")
+	NPC:SetHealth("300")
+	NPC:AddRelationship( "npc_antlion D_HT 20" )
+
+end
 function SpawnCombinePrisonGuard( pos,owner )
 	NPC = ents.Create( "npc_combine_s" )
 	NPC:SetKeyValue("NumGrenades", "1") 
@@ -757,7 +780,7 @@ function SpawnRebel(pos)
 	NPC:SetKeyValue("squadname", "Rebels")
 	NPC:SetKeyValue("citizentype", "3")
 	NPC:SetName("Rebel")
-	--NPC:SetKeyValue("spawnflags", "65536")
+	NPC:SetKeyValue("spawnflags", 8+256+512)
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
 	NPC:Spawn()
 	if GetConVarNumber("cc_use_NPC_PACK_weapons") == 1 then
@@ -816,21 +839,20 @@ end
 
 -- BETA NPCs
 
-if file.Exists( "gamemodes/combinecontrol/gamemode/maps/"..game.GetMap()..".lua", "GAME" ) then
+if file.Exists( "gamemodes/combinesquadsurvival/gamemode/maps/"..game.GetMap()..".lua", "GAME" ) then
 include("/maps/"..game.GetMap()..".lua")
-print("[The Hunt]: map configuration file found, "..game.GetMap()..".lua")
+print("[Combine Squad Survival]: map configuration file found, "..game.GetMap()..".lua")
 configfound=1
 
 else
 configfound=0
-print("[The Hunt]: map config file not found. The Hunt will not start.")
 --include("/maps/nomap.lua")
 end
 
 
 
 function GM:EntityTakeDamage(damaged,damage)
-
+if damaged:Health() < 1 then damaged:Remove() end
 if damaged:IsNPC() and damaged:GetClass() == damage:GetAttacker():GetClass()then
 damage:ScaleDamage(0)
 damaged:SetSchedule(SCHED_MOVE_AWAY)
