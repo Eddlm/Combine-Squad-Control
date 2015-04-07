@@ -1,4 +1,4 @@
-GM.Name = "CombineControl"
+GM.Name = "Combine Squad Survival"
 GM.Author = "Eddlm"
 GM.Email = "eddmalaga@gmail.com"
 GM.Website = "http://facepunch.com/showthread.php?t=1391522"
@@ -8,6 +8,8 @@ REBEL_WEAPONS = { "ai_weapon_crossbow","ai_weapon_smg1","ai_weapon_shotgun","ai_
 
 Zombies = {"npc_headcrab_fast","npc_zombie","npc_fastzombie","npc_headcrab_black","npc_poisonzombie"}
 Monsters = {"npc_antlion","npc_antlionguard"}
+
+KillsWithWeapon={"npc_combine_s", "npc_metropolice","npc_citizen","player"}
 
 SPAWNPOINTS = {
 "info_player_terrorist",
@@ -40,9 +42,9 @@ function ISaid( ply, text, public )
 		return false
 	end
 	
-	/*
+
 if GetConVarNumber("cc_extra_beta_npcs") == 1 then
-    if text == "!assasin" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
+    if text == "!assassin" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
 		SpawnCombineAssasin(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
 		return false
 	end
@@ -51,7 +53,7 @@ if GetConVarNumber("cc_extra_beta_npcs") == 1 then
 		return false
 	end
 end
-*/
+
 	    if text == "!start" and started != 1 then
 		started=1
 		AddonCycleLong()
@@ -63,10 +65,9 @@ end
 		return false
 		end
     if text == "!mortar" then
-
-timer.Simple(1,function() 		SpawnCanister(ply:GetEyeTraceNoCursor().HitPos)end)
-ply:EmitSound("npc/combine_soldier/vo/overwatchrequestskyshield.wav")
-PrintMessage(HUD_PRINTTALK, "[Overwatch]: Requested mortar round at "..tostring(ply:GetEyeTraceNoCursor().HitPos).."") 
+	timer.Simple(1,function() SpawnCanister(ply:GetEyeTraceNoCursor().HitPos) end)
+	ply:EmitSound("npc/combine_soldier/vo/overwatchrequestskyshield.wav")
+	PrintMessage(HUD_PRINTTALK, "[Overwatch]: Requested mortar round at "..tostring(ply:GetEyeTraceNoCursor().HitPos).."") 
 		return false
 	end
 	    if text == "!zombies" and started != 1 then
@@ -109,6 +110,19 @@ end
 hook.Add( "PlayerSay", "ISaid", ISaid )
 
 
+
+
+NPC_WEAPON_PACK_2_RAPID_FIRE={"npc_acr","npc_m4a1iron","npc_m4a1holo","npc_hk416","npc_g36","npc_ak47","npc_fal","npc_m249","npc_hk21e","npc_ump45","npc_p90","npc_mp5","npc_uzi","npc_m24","npc_M76"}
+
+NPC_WEAPON_PACK_2_PISTOLS={"npc_m9","npc_m1911","npc_deagle"}
+
+NPC_WEAPON_PACK_2_RPGS={"npc_rpg7","npc_matador","npc_m202"}
+
+NPC_WEAPON_PACK_2_SHOTGUNS={"npc_mossberg590"}
+
+NPC_WEAPON_PACK_2_SNIPERS={"npc_m82","npc_as50","npc_awp"}
+
+NPC_WEAPON_PACK_2_ALL={"npc_acr","npc_m4a1iron","npc_m4a1holo","npc_hk416","npc_g36","npc_ak47","npc_fal","npc_m249","npc_hk21e","npc_ump45","npc_p90","npc_mp5","npc_uzi","npc_m24","npc_M76","npc_m9","npc_m1911","npc_deagle","npc_rpg7","npc_matador","npc_m202","npc_mossberg590","npc_m82","npc_as50","npc_awp"}
 
 CombineBootSound = {
 "npc/combine_soldier/gear1.wav",

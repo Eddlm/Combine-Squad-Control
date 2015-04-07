@@ -143,6 +143,7 @@ PrintMessage(HUD_PRINTTALK, "EnemiesLeft: "..EnemiesLeft.."")
 
 if EnemiesLeft < 1 then MoreWaves() end
 end
+
 function GM:Think()
  if CurTime() > gamemodetime+2 then
  --print("Addon Cycle")
@@ -153,20 +154,26 @@ gamemodetime = CurTime()
 	if table.HasValue(AllCombineEntities, v:GetClass()) and v:Health() > 0 then
 	--if !v:GetEnemy() and !v:IsMoving() and math.random(1,4) == 1 then  v:EmitSound(table.Random(CombineChat_Idle), 75, 100) end
 		if v:GetNWVector("HoldPosition") != "NO_VECTOR"  then
-			if v:GetPos():Distance(v:GetNWVector("HoldPosition")) > 200 then
-				if v:GetNWString("Squad") == "no" then
+			if v:GetNWString("Squad") == "no" then
+				if v:GetPos():Distance(v:GetNWVector("HoldPosition")) > GetConVarNumber("cc_hold_position_tolerance")
+ and !v:IsMoving()then
 					v:SetLastPosition(v:GetNWVector("HoldPosition"))
-					v:SetSchedule(SCHED_FORCED_GO_RUN)
-				elseif  v:GetPhysicsObject():GetVelocity():Length() < 50 then
-					v:SetLastPosition(v:GetNWVector("HoldPosition"))
-					v:SetSchedule(SCHED_FORCED_GO_RUN)
+					v:SetSchedule(SCHED_FORCED_GO_RUN)			
 				end
-			elseif math.random(1,3) == 1 and !v:IsMoving() and !v:GetEnemy() then v:SetSchedule(SCHED_ALERT_SCAN)				  
-			end
+			else			
+				if v:GetPos():Distance(v:GetNWVector("HoldPosition")) > GetConVarNumber("cc_hold_position_tolerance")
+ and !v:IsMoving() then
+					v:SetLastPosition(v:GetNWVector("HoldPosition"))
+					v:SetSchedule(SCHED_FORCED_GO_RUN)			
+				end			
+			end		
 
+			if math.random(1,3) == 1 and !v:IsMoving() and !v:GetEnemy() then v:SetSchedule(SCHED_ALERT_SCAN)				  
+			end
 		end
 		
-		if v:GetNWString("FollowMe") != "no" then	local owner = ents.GetByIndex(v:GetNWString("owner"))
+		if v:GetNWString("FollowMe") != "no" then
+		local owner = ents.GetByIndex(v:GetNWString("owner"))
 				if v:GetPos():Distance(owner:GetPos()+ (owner:GetForward()*-100)) > 400  then
 					--print(owner:GetName())
 					v:SetLastPosition((owner:GetPos() + (owner:GetForward()*-100))+Vector(math.random(-50,50),math.random(-50,50),0))
@@ -176,13 +183,10 @@ gamemodetime = CurTime()
 		
 		if !v:GetEnemy() and v:Health() < 100 then v:SetHealth(v:Health()+1) end			
 end
-/*
-for k, v in pairs(player.GetAll()) do
-	if v:Health() < 100 then v:SetHealth(v:Health()+1) end
-end
 
-*/
-	if !table.HasValue(AllCombineEntities, v:GetClass()) and v:IsNPC() and !v:IsMoving() then
+
+
+if !table.HasValue(AllCombineEntities, v:GetClass()) and v:IsNPC() and !v:IsMoving() then
 if CountEntity("npc_combine_s") > 0 then
 	 randompl = table.Random(ents.FindByClass("npc_combine_s"))
 	else
@@ -194,9 +198,6 @@ end
 	--print(randompl:GetClass())
 	end
 end
-
-
-
 end
 end
 
@@ -226,7 +227,7 @@ client:EmitSound(table.Random(CombineChat_Hold), 75, 100)
 			v:SetNWVector("HoldPosition", client:GetEyeTraceNoCursor().HitPos+Vector(math.random(-50,50),math.random(-50,50),0) )
 			v:SetLastPosition(client:GetEyeTraceNoCursor().HitPos)
 			v:SetSchedule(SCHED_FORCED_GO_RUN)
-			v:SetKeyValue( "ignoreunseenenemies", 1 )
+			v:SetKeyValue( "ignoreunseenenemies", 0 )
 			client:SendLua("squad2holdingposition=1")
 			v:SetNWString("FollowMe","no")
 			v:ClearEnemyMemory() 
@@ -343,7 +344,7 @@ client:EmitSound(table.Random(CombineChat_Hold), 75, 100)
 			v:SetNWVector("HoldPosition", client:GetEyeTraceNoCursor().HitPos+Vector(math.random(-50,50),math.random(-50,50),0) )
 			v:SetLastPosition(client:GetEyeTraceNoCursor().HitPos)
 			v:SetSchedule(SCHED_FORCED_GO_RUN)
-			v:SetKeyValue( "ignoreunseenenemies", 1 )
+			v:SetKeyValue( "ignoreunseenenemies", 0 )
 			v:ClearEnemyMemory() 
 			client:SendLua("squad1holdingposition=1")
 			v:SetNWString("FollowMe","no")
@@ -466,7 +467,7 @@ CanTalk=1
 			v:ClearEnemyMemory() 
 			v:SetLastPosition(client:GetEyeTraceNoCursor().HitPos)
 			v:SetSchedule(SCHED_FORCED_GO_RUN)
-			v:SetKeyValue( "ignoreunseenenemies", 1 )
+			v:SetKeyValue( "ignoreunseenenemies", 0 )
 		if CanTalk==1 then CanTalk=0  timer.Simple(1,function() v:EmitSound(table.Random(CombineChat_Okay), 75, 100) CanTalk=1 end)  end
 		end
 		end	
@@ -598,6 +599,8 @@ function GM:PlayerSpawn(ply)
 	ply:SetCrouchedWalkSpeed(0.3)
 	ply:AllowFlashlight(true)
 	ply:SetNoCollideWithTeammates(1)
+
+
 end
 
 function GM:OnEntityCreated(entity)
@@ -613,13 +616,24 @@ function GM:OnEntityCreated(entity)
 
 	--local randompl = table.Random(player.GetAll())
 	--entity:SetTarget(randompl)
-elseif entity:IsNPC() then 
+elseif entity:IsNPC() then
+	if entity:GetClass() == "npc_headcrab_fast" then entity:SetName("Fast Headcrab") end
+	if entity:GetClass() == "npc_zombie" then entity:SetName("Zombie") end
+	if entity:GetClass() == "npc_fastzombie" then entity:SetName("Fast Zombie") end
+	if entity:GetClass() == "npc_headcrab_black" then entity:SetName("Poison Headcrab") end
+	if entity:GetClass() == "npc_poisonzombie" then entity:SetName("Poison Zombie") end
+	if entity:GetClass() == "npc_antlion" then entity:SetName("Antlion") end
+	if entity:GetClass() == "npc_antlionguard" then entity:SetName("Antlion Guard") end
+	if entity:GetClass() == "npc_headcrab" then entity:SetName("Headcrab") end
 	local randompl = table.Random(ents.FindByClass("player"))
 	entity:AddRelationship( "player D_HT 1" )
 	entity:SetCollisionGroup(3)
 	entity:AddRelationship( "npc_combine_s D_HT 20" )
 	end
 end
+
+
+
 function SpawnCombineS( pos,owner )
 	NPC = ents.Create( "npc_combine_s" )
 	NPC:SetKeyValue("NumGrenades", "2") 
@@ -627,7 +641,11 @@ function SpawnCombineS( pos,owner )
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
 	NPC:SetKeyValue( "spawnflags", 512 )
 	NPC:Spawn()
+	if GetConVarNumber("cc_use_NPC_PACK_weapons") == 1 then
+		NPC:Give(""..table.Random(NPC_WEAPON_PACK_2_RAPID_FIRE).."")
+	else
 	NPC:Give("ai_weapon_ar2")
+	end
 	NPC:SetName("Combine Soldier")
 	NPC:SetCurrentWeaponProficiency( WEAPON_PROFICIENCY_PERFECT )
 	NPC:SetNWString("owner",""..owner.."")
@@ -651,7 +669,11 @@ function SpawnCombineShotgunner ( pos,owner )
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
 	NPC:SetKeyValue( "spawnflags", 512 )
 	NPC:Spawn()
-	NPC:Give("ai_weapon_shotgun")
+	if GetConVarNumber("cc_use_NPC_PACK_weapons") == 1 then
+		NPC:Give(""..table.Random(NPC_WEAPON_PACK_2_SHOTGUNS).."")
+	else
+	NPC:Give("ai_weapon_shotgun")	
+	end
 	NPC:SetName("Shotgunner")
 	NPC:SetCurrentWeaponProficiency( WEAPON_PROFICIENCY_PERFECT )
 	NPC:SetNWString("owner",""..owner.."")
@@ -675,9 +697,12 @@ function SpawnCombineElite( pos,owner )
 	NPC:SetKeyValue( "spawnflags", 768 )
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
 	NPC:Spawn()
+	if GetConVarNumber("cc_use_NPC_PACK_weapons") == 1 then
+		NPC:Give(""..table.Random(NPC_WEAPON_PACK_2_RAPID_FIRE).."")
+	else
 	NPC:Give( "ai_weapon_ar2" )
+	end
 	NPC:SetName("Elite Soldier")
-
 	NPC:SetCurrentWeaponProficiency( WEAPON_PROFICIENCY_PERFECT )
 	NPC:SetNWString("owner",""..owner.."")
 	NPC:SetNWString("selected","0")
@@ -707,7 +732,11 @@ function SpawnCombinePrisonGuard( pos,owner )
 	NPC:SetKeyValue( "spawnflags", 512+256 )
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
 	NPC:Spawn()
+	if GetConVarNumber("cc_use_NPC_PACK_weapons") == 1 then
+		NPC:Give(""..table.Random(NPC_WEAPON_PACK_2_RPGS).."")
+	else
 	NPC:Give( "ai_weapon_crossbow" )
+	end
 	NPC:SetCurrentWeaponProficiency( WEAPON_PROFICIENCY_PERFECT )
 	NPC:SetNWString("owner",""..owner.."")
 	NPC:SetNWString("selected","0")
@@ -728,10 +757,14 @@ function SpawnRebel(pos)
 	NPC:SetKeyValue("squadname", "Rebels")
 	NPC:SetKeyValue("citizentype", "3")
 	NPC:SetName("Rebel")
-	NPC:Give(table.Random(REBEL_WEAPONS))
 	--NPC:SetKeyValue("spawnflags", "65536")
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
 	NPC:Spawn()
+	if GetConVarNumber("cc_use_NPC_PACK_weapons") == 1 then
+	NPC:Give(""..table.Random(NPC_WEAPON_PACK_2_ALL).."")
+	else
+	NPC:Give(table.Random(REBEL_WEAPONS))
+	end
 	NPC:SetHealth("100")
 	NPC:SetCurrentWeaponProficiency( WEAPON_PROFICIENCY_PERFECT )	
 end
@@ -756,11 +789,14 @@ function SpawnCombineAssasin( pos,owner )
 	NPC:SetName("Assasin")
 	NPC:SetHealth("70")
 	NPC:AddRelationship( "player D_LI 99" )
+	NPC:AddEntityRelationship( player.GetByID(1), D_LI, 99 )
 
 end
 
 function SpawnCombineCremator( pos,owner )
 	NPC = ents.Create( "npc_cremator" )
+	NPC:AddRelationship( "player D_LI 99" )
+
 	NPC:SetPos( pos )
 	NPC:SetKeyValue( "spawnflags", 512+256 )
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
@@ -775,6 +811,7 @@ function SpawnCombineCremator( pos,owner )
 	NPC:SetName("Cremator")
 	NPC:SetHealth("900")
 	NPC:AddRelationship( "player D_LI 99" )
+	NPC:AddEntityRelationship( player.GetByID(1), D_LI, 99 )
 end
 
 -- BETA NPCs
@@ -836,21 +873,22 @@ WaveNumber=0
 WaveSpawnReference=0
 started=0
 gamemodetime = CurTime()
+CanTalk=1
 end
 function GM:OnNPCKilled(victim, killer, weapon)
 
 		if killer:IsPlayer() or killer:IsNPC() then
 			net.Start( "PlayerKillNotice" )
-			net.WriteString( ""..killer:GetClass().."" )
-			if weapon:IsPlayer() then
-				net.WriteString( ""..weapon:GetActiveWeapon():GetClass().."" )
+			net.WriteString( ""..killer:GetName().."" )
+			if weapon:GetClass() == "npc_grenade_frag" or weapon:GetClass() == "crossbow_bolt" then net.WriteString( ""..weapon:GetClass().."" )
+			elseif weapon:IsPlayer() or table.HasValue(KillsWithWeapon, killer:GetClass()) then
+				net.WriteString( ""..killer:GetActiveWeapon():GetClass().."" )
 			else
-				net.WriteString( ""..weapon:GetClass().."" )
+				net.WriteString( ""..killer:GetClass().."" )
 			end
-			net.WriteString( ""..victim:GetClass().."" )
+			net.WriteString( ""..victim:GetName().."" )
 			net.Broadcast()
 		end
-
  if table.HasValue(AllCombineEntities, killer:GetClass())
  then
  
@@ -869,28 +907,34 @@ function GM:OnNPCKilled(victim, killer, weapon)
   if table.HasValue(AllCombineEntities, victim:GetClass())
  then 
   if victim:GetNWString("owner") != "none" then
- local owner = ents.GetByIndex(tonumber(victim:GetNWString("owner")))
+	local owner = ents.GetByIndex(tonumber(victim:GetNWString("owner")))
   owner:PrintMessage(HUD_PRINTTALK, ""..victim:GetNWString("name").." has died!")
   owner:SetFrags(math.Round(owner:Frags()/2,0))
+	owner:EmitSound(table.Random(CombineChat_Dead), 75, 100)
  end
+
  end
  
- 
- if !victim:OnGround() then
- RunConsoleCommand( "host_timescale", "0.3")   
-timer.Simple(1, function() RunConsoleCommand( "host_timescale", "1") end)
- end
- end
+
+if !victim:OnGround() then
+	for k, v in pairs(ents.FindInSphere(victim:GetPos(),1024)) do
+		if v:IsPlayer() then
+			RunConsoleCommand( "host_timescale", "0.3")   
+			timer.Simple(1, function() RunConsoleCommand( "host_timescale", "1") end)
+			break
+		end
+	end
+end
+end
 
 
 function FirstSpawn(ply)
-ply:SendLua("CombineBootsRun()")
-if ply:EntIndex() == 1 then
 if configfound==1 then
 ply:PrintMessage(HUD_PRINTTALK, "Prepare yourself and say !start when you are ready.")
 ply:PrintMessage(HUD_PRINTTALK, "Say !stop if you want a break.")
 end
-end
+timer.Simple(3, function() ply:SendLua("CombineBootsRun()")  end)
+
 ply:SendLua("localownerid="..ply:EntIndex().."")
 end
 hook.Add( "PlayerInitialSpawn", "playerInitialSpawn", FirstSpawn )

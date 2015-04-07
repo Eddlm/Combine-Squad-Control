@@ -11,6 +11,23 @@ squad1holdingposition=0
 squad1followingyou=0
 squad1=false
 
+killicon.AddFont( "prop_physics",		"HL2MPTypeDeath",	"9",	Color( 255, 80, 0, 255 ) )
+killicon.AddFont( "ai_weapon_smg1",		"HL2MPTypeDeath",	"/",	Color( 255, 80, 0, 255 ) )
+killicon.AddFont( "ai_weapon_357",			"HL2MPTypeDeath",	".",	Color( 255, 80, 0, 255 ) )
+killicon.AddFont( "ai_weapon_ar2",			"HL2MPTypeDeath",	"2",	Color( 255, 80, 0, 255 ) )
+killicon.AddFont( "crossbow_bolt",		"HL2MPTypeDeath",	"1",	Color( 255, 80, 0, 255 ) )
+killicon.AddFont( "ai_weapon_shotgun",		"HL2MPTypeDeath",	"0",	Color( 255, 80, 0, 255 ) )
+killicon.AddFont( "ai_rpg_missile",		"HL2MPTypeDeath",	"3",	Color( 255, 80, 0, 255 ) )
+killicon.AddFont( "npc_grenade_frag",	"HL2MPTypeDeath",	"4",	Color( 255, 80, 0, 255 ) )
+killicon.AddFont( "ai_weapon_pistol",		"HL2MPTypeDeath",	"-",	Color( 255, 80, 0, 255 ) )
+killicon.AddFont( "prop_combine_ball",	"HL2MPTypeDeath",	"8",	Color( 255, 80, 0, 255 ) )
+killicon.AddFont( "grenade_ar2",		"HL2MPTypeDeath",	"7",	Color( 255, 80, 0, 255 ) )
+killicon.AddFont( "ai_weapon_stunstick",	"HL2MPTypeDeath",	"!",	Color( 255, 80, 0, 255 ) )
+killicon.AddFont( "npc_satchel",		"HL2MPTypeDeath",	"*",	Color( 255, 80, 0, 255 ) )
+killicon.AddFont( "npc_tripmine",		"HL2MPTypeDeath",	"*",	Color( 255, 80, 0, 255 ) )
+killicon.AddFont( "ai_weapon_crowbar",		"HL2MPTypeDeath",	"6",	Color( 255, 80, 0, 255 ) )
+
+
 
 net.Receive( "PlayerKillNotice", function( len, ply )
 	GAMEMODE:AddDeathNotice(net.ReadString(), 0, net.ReadString(), net.ReadString(), 1001)
@@ -516,7 +533,7 @@ timer.Simple(0.3, CombineBootsRun)
 					if v:GetVelocity():Length() > 80 then 
 						v:EmitSound(table.Random(CombineBootSound), 65, 100)
 						--sound.Play( table.Random(CombineBootSound), v:GetPos(), 75, 100, 0.5 )
-						print("Run")
+						--print("Run")
 					end
 				end
 		end

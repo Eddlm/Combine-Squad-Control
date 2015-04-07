@@ -1,0 +1,52 @@
+"CombineControl"
+{
+	"base"		"base"
+	"title"		"CombineSquadSurvival"
+	"maps"		""
+	"menusystem"	"1"
+
+	"settings"
+	{
+		1
+		{
+			"name"		"cc_damage_multiplier"
+			"text"		"Damage Multiplier"
+			"help"		""
+			"type"		"Numeric"
+			"default"	"1"
+		}
+		2
+		{
+			"name"		"cc_max_combine"
+			"text"		"Combine Limit"
+			"help"		""
+			"type"		"Numeric"
+			"default"	"20"
+		}
+		3
+		{
+			"name"		"cc_use_NPC_PACK_weapons"
+			"text"		"Use NPC Weapon Pack 2"
+			"help"		""
+			"type"		"CheckBox"
+			"default"	"0"
+		}
+		4
+		{
+			"name"		"cc_extra_beta_npcs"
+			"text"		"Use HL2 Beta SNPCs"
+			"help"		""
+			"type"		"CheckBox"
+			"default"	"0"
+		}
+		5
+		{
+			"name"		"cc_hold_position_tolerance"
+			"text"		"Hold Position Tolerance"
+			"help"		""
+			"type"		"Numeric"
+			"default"	"300"
+		}
+	}
+}
+
