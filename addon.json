@@ -1,12 +1,11 @@
-
 {
-	"name": "Combine Squad Survival",
-	"title": "Combine Squad Survival", 
-	"description": "Manage a Combine Squad and survive",
-	"type": "gamemode",
-	"tags": 
+	"title"		:	"Combine Squad Survival",
+	"type"		:	"Gamemode",
+	"tags"		:	[ "Fun", "Realism" ],
+	"ignore"	:
 	[
-		"fun",
-		"realism"
+		"*.psd",
+		"*.vcproj",
+		"*.svn*"
 	]
-} 
+}

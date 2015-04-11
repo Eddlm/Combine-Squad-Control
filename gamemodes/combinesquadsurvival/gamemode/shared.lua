@@ -17,8 +17,8 @@ RelationshipIssuesAddEntity={"npc_fassassin","npc_cremator"}
 NoRelationshipIssues={"npc_combine_s", "npc_metropolice","npc_hunter","npc_rollermine","npc_helicopter","npc_gunship","npc_manhack","npc_turret_floor","npc_turret_ceiling","npc_combinedropship"}
 
 CombineSoldiers = {"npc_combine_s", "npc_metropolice","npc_hunter","npc_fassassin","npc_cremator","npc_rollermine","npc_sniper"}
-CombineHelicopters = {"npc_helicopter","npc_gunship","npc_combinedropship"}
-AllCombineEntities = {"npc_combine_s", "npc_metropolice","npc_hunter","npc_fassassin","npc_cremator","npc_rollermine","npc_helicopter","npc_gunship","npc_manhack","npc_turret_floor","npc_turret_ceiling","npc_combinedropship","npc_sniper"}
+CombineHelicopters = {"npc_helicopter","npc_combinegunship","npc_combinedropship"}
+AllCombineEntities = {"npc_combine_s", "npc_metropolice","npc_hunter","npc_fassassin","npc_cremator","npc_rollermine","npc_helicopter","npc_combinegunship","npc_manhack","npc_turret_floor","npc_turret_ceiling","npc_combinedropship","npc_sniper"}
 REBEL_WEAPONS = { "ai_weapon_crossbow","ai_weapon_smg1","ai_weapon_shotgun","ai_weapon_ar2"}
 
 Zombies = {"npc_headcrab_fast","npc_zombie","npc_fastzombie","npc_headcrab_black","npc_poisonzombie"}
@@ -34,19 +34,13 @@ SPAWNPOINTS = {
 }
 
 function ISaid( ply, text, public )
+	
 
-
-    if text == "!soldier" and CountCombine() < GetConVarNumber("cc_max_combine") then
-		SpawnCombineS(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
+    if text == "!soldier"  then
+			SpawnCombineS(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
 		return false
 	end
 
-	/*
-    if text == "!soldierrappel" and CountCombine() < GetConVarNumber("cc_max_combine") then
-		SpawnCombineSRappel(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
-		return false
-	end	
-	*/
     if text == "!shotgunner" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
 		SpawnCombineShotgunner(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
 		return false
@@ -73,6 +67,9 @@ function ISaid( ply, text, public )
 			v:Remove()
 			end
 			for k, v in pairs(ents.FindByClass("npc_helicopter")) do
+			v:Remove()
+			end
+			for k, v in pairs(ents.FindByClass("npc_combinegunship")) do
 			v:Remove()
 			end
 		return false 
@@ -110,12 +107,12 @@ function ISaid( ply, text, public )
 		return false
 	end
 	
-    if text == "!dropship" and CountEntity("npc_combinedropship") < 1 then
+    if text == "!dropship" and CountAirUnits() < 1 then
 		SpawnDropship(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
 		return false
 		elseif CountEntity("npc_combinedropship")+CountEntity("npc_helicopter") > 0 then ply:PrintMessage(HUD_PRINTTALK, "Only one combine airship allowed for now, sorry.") 
 	end	
-    if text == "!helicopter" and CountEntity("npc_helicopter") < 1 then
+    if text == "!helicopter" and CountAirUnits() < 1 then
 		SpawnHeli(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
 		return false
 		elseif CountEntity("npc_helicopter")+CountEntity("npc_combinedropship") > 0 then ply:PrintMessage(HUD_PRINTTALK, "Only one combine airship allowed for now, sorry.") 
@@ -241,7 +238,7 @@ end
 		
 		end
 		
-	if string.sub( text, 1, 1 ) == "!" then return false end
+--	if string.sub( text, 1, 1 ) == "!" then return false end
 
 end	
 hook.Add( "PlayerSay", "ISaid", ISaid )
@@ -293,8 +290,6 @@ CombineChat_Go={"npc/metropolice/vo/keepmoving.wav","npc/combine_soldier/vo/gosh
 
 
 if IsMounted("ep1") or IsMounted("ep2") then
-
-
 
 table.insert(Zombies, "npc_zombine")
 

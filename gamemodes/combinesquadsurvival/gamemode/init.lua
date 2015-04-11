@@ -44,15 +44,32 @@ end
 if data == "Sniper" then SpawnSniper(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:GetAngles(),client:EntIndex()) 
 end
 
-/*
-if then end
+if data == "Helicopter" and CountAirUnits() < 1 then SpawnHeli(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
+end
+if data == "Gunship" and CountAirUnits() < 1 then SpawnGunship(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
+end
+if data == "Dropship" and CountAirUnits() < 1 then SpawnDropship(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
+end
 
-if then end
-if then end
-if then end
-if then end
-if then end
-*/
+if data == "Turret" then SpawnTurret(client:GetEyeTraceNoCursor().HitPos,client:GetAngles(),client:EntIndex()) 
+end
+
+if data == "Hunter" then SpawnHunter(client:GetEyeTraceNoCursor().HitPos,client:EntIndex()) 
+end
+
+if data == "CeilingTurret" then
+	traceRes = util.QuickTrace(client:GetEyeTraceNoCursor().HitPos, Vector(0,0,200), player.GetAll())
+	if traceRes.Hit then
+		SpawnCeilingTurretStrong(client:GetEyeTraceNoCursor().HitPos,client:GetAngles(),client:EntIndex())
+	else 
+		client:PrintMessage(HUD_PRINTTALK, "Combine Cameras can only spawn on a ceiling.") 	
+	end
+end
+
+if data == "Rollermine" then SpawnRollermine(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,20),client:EntIndex()) 
+end
+
+
 end)
 
 
@@ -98,7 +115,15 @@ local entities=0
 		end
 		return(entities)
 end
-
+function CountAirUnits()
+local entities=0
+		for k, v in pairs(ents.GetAll()) do
+		if table.HasValue(CombineHelicopters, v:GetClass()) then
+			entities=entities+1
+		end
+		end
+		return(entities)
+end
 function AntLionWave()
 --PrintMessage(HUD_PRINTTALK, "AntLionWave")
 
@@ -239,23 +264,9 @@ gamemodetime = CurTime()
 	for k, v in pairs(ents.GetAll()) do
 	if v:Health() > 0 then
 	--if !v:GetEnemy() and !v:IsMoving() and math.random(1,4) == 1 then  v:EmitSound(table.Random(CombineChat_Idle), 75, 100) end
-/*
-if table.HasValue(RelationshipIssuesSet, v:GetClass()) then 
-	table.foreach(AllCombineEntities, function(key,value)
-		v:Fire ( "SetRelationship", ""..value.." D_LI" )
-	end)	
-end
-if table.HasValue(RelationshipIssuesAddEntity, v:GetClass()) then 
-
-	table.foreach(AllCombineEntities, function(key,value)
-		v:AddEntityRelationship(  value, D_LI, 99 )
-	end)
-end	
-*/
 
 		if table.HasValue(CombineHelicopters, v:GetClass()) then 
 		 owner = ents.GetByIndex(v:GetNWString("owner"))
-
 			if v:GetNWString("FollowMe") != "no" then
 				targetTrace = util.QuickTrace( owner:GetPos(), Vector(0,0,3000),{v,owner})
 				creating = ents.Create( "path_track" )
@@ -481,7 +492,7 @@ client:EmitSound(table.Random(CombineChat_Hold), 75, 100)
 			v:SetNWVector("HoldPosition", client:GetEyeTraceNoCursor().HitPos+Vector(math.random(-50,50),math.random(-50,50),0) )
 			v:SetLastPosition(client:GetEyeTraceNoCursor().HitPos)
 			v:SetSchedule(SCHED_FORCED_GO_RUN)
-			v:SetKeyValue( "ignoreunseenenemies", 0 )
+			v:SetKeyValue( "ignoreunseenenemies", 1 )
 			v:ClearEnemyMemory() 
 			client:SendLua("squad1holdingposition=1")
 			v:SetNWString("FollowMe","no")
@@ -613,12 +624,11 @@ CanTalk=1
 		for k, v in pairs(ents.GetAll()) do
 		if table.HasValue(AllCombineEntities, v:GetClass()) and v:GetNWString("selected") == "1" and v:GetNWString("owner") == ""..client:EntIndex().."" then
 			v:SetNWVector("HoldPosition", client:GetEyeTraceNoCursor().HitPos )
-			v:SetKeyValue( "ignoreunseenenemies", 1 )
 			v:SetNWString("FollowMe","no")
 			v:ClearEnemyMemory() 
 			v:SetLastPosition(client:GetEyeTraceNoCursor().HitPos)
 			v:SetSchedule(SCHED_FORCED_GO_RUN)
-			v:SetKeyValue( "ignoreunseenenemies", 0 )
+			v:SetKeyValue( "ignoreunseenenemies", 1 )
 		if CanTalk==1 then CanTalk=0  timer.Simple(1,function() v:EmitSound(table.Random(CombineChat_Okay), 75, 100) CanTalk=1 end)  end
 		end
 		end	
@@ -730,7 +740,7 @@ local info=ply:GetEyeTraceNoCursor()
 
 	if ply:KeyPressed(IN_ATTACK) then
 	if ply:OnGround() then
-		PrintMessage(HUD_PRINTTALK, "ddddd")
+		PrintMessage(HUD_PRINTTALK, "Spawn using right click.")
 		ply:UnSpectate()
 		ply:Spectate(6)
 		ply:SetMoveType(10)
@@ -1201,10 +1211,14 @@ end
 
 function GM:EntityTakeDamage(damaged,damage)
 --if damaged:Health() < 1 and damaged:IsNPC() then damaged:Remove() end
+damage:ScaleDamage(GetConVarNumber("cc_damage_multiplier"))
 
 
 if table.HasValue(AllCombineEntities, damaged:GetClass()) then 
+print(damage:GetDamageType())
+if damage:IsDamageType(   DMG_SLASH   ) then
 damaged:SetSchedule(SCHED_MOVE_AWAY)
+end
 if table.HasValue(AllCombineEntities, damage:GetAttacker():GetClass()) then
 damage:ScaleDamage(0)
 end
@@ -1223,6 +1237,8 @@ function GM:Initialize()
 	RunConsoleCommand( "ai_norebuildgraph", "1")   
 end
 
+
+	
 function GM:InitPostEntity()
 if !combinespawnzones then
 combinespawnzones = {}
@@ -1350,6 +1366,29 @@ function SpawnHeli( pos,owner)
 	NPC:SetHealth("500")
 
 end
+function SpawnGunship( pos,owner)
+
+	NPC = ents.Create( "npc_combinegunship" )
+	NPC:SetKeyValue( "ignoreunseenenemies", 1 )
+	NPC:SetKeyValue( "spawnflags", 262144 )
+	NPC:SetPos( pos+Vector(0,0,100) )
+	NPC:Spawn()
+	NPC:Activate()
+	NPC:Fire("activate","",0)
+	NPC:SetCollisionGroup(3)
+
+	NPC:SetName("Gunship")
+	NPC:SetNWString("owner",""..owner.."")
+	NPC:SetNWString("selected","0")
+	NPC:SetNWVector("HoldPosition","NO_VECTOR")
+	NPC:SetNWString("FollowMe", "no")
+	NPC:SetNWString("Squad", "no")
+	NPC:SetKeyValue("squadname", "")
+	NPC:SetNWString("name","Gunship")
+	NPC:SetHealth("500")
+
+end
+
 function SpawnDropship( pos,owner)
 
 	NPC = ents.Create( "npc_combinedropship" )

@@ -57,6 +57,10 @@ hook.Add( "PreDrawHalos", "AddHalos", function()
 end)
 
 hook.Add( "HUDPaint", "HuntHud", function()
+if !LocalPlayer():Alive() then
+draw.DrawText( "·", "TargetIDsmall", ScrW() * 0.5, ScrH() * 0.49, Color(255,255,255), TEXT_ALIGN_CENTER )
+
+end
 local color = Color( 0,255,0 )
 if squad1==false then color = Color( 255,0,0 ) else color = Color( 0,255,0 ) end
 draw.SimpleText( "Alpha", "TargetID", ScrW()/2.2, ScrH()/1.06,color)
@@ -129,6 +133,8 @@ gui.EnableScreenClicker(true)
 			Squad2GoHere:SetVisible(true)
 			Squad2HoldPosition:SetVisible(true)	
 			MenuButton:SetVisible(true)
+			MenuButtonAir:SetVisible(true)
+			MenuButtonMachines:SetVisible(true)
 
 	end
 
@@ -154,6 +160,8 @@ canshow=1
 			Squad2GoHere:SetVisible(false)
 			Squad2HoldPosition:SetVisible(false)
 			MenuButton:SetVisible(false)
+			MenuButtonAir:SetVisible(false)
+			MenuButtonMachines:SetVisible(false)
 
 	end
 end)
@@ -181,6 +189,8 @@ if FormSquad2FromSelected then FormSquad2FromSelected:Remove() end
 if Squad2GoHere then Squad2GoHere:Remove() end
 if Squad2HoldPosition then Squad2HoldPosition:Remove() end
 if MenuButton then MenuButton:Remove() end
+if MenuButtonAir then MenuButtonAir:Remove() end
+if MenuButtonMachines then MenuButtonMachines:Remove() end
 
 
 
@@ -416,15 +426,46 @@ MenuButton.DoClick = function ( btn )
     MenuButtonOptions:AddOption("Guard", function() SpawnOrder("Guard") end)
     MenuButtonOptions:AddOption("Metrocop",function() SpawnOrder("Metrocop") end )
     MenuButtonOptions:AddOption("Sniper",function() SpawnOrder("Sniper") end )
+if IsMounted('ep2') then
+    MenuButtonOptions:AddOption("Hunter",function() SpawnOrder("Hunter") end )
 
+end
     MenuButtonOptions:Open() -- Open the menu AFTER adding your options
 	MenuButtonOptions:SetPos(MenuButton:GetPos())
 
 end
 
-		
-MenuButton:SetVisible(false)
+MenuButtonAir = vgui.Create("DButton")
+MenuButtonAir:SetText( "Air Units" )
+MenuButtonAir:SetPos(ScrW() * 0.54, ScrH() * 0.24)
+MenuButtonAir:SetSize( 90, 30 )
+MenuButtonAir.DoClick = function ( btn )
+    local MenuButtonAirOptions = DermaMenu() -- Creates the menu
+    MenuButtonAirOptions:AddOption("Helicopter",function() SpawnOrder("Helicopter") end ) -- Add options to the menu
+    MenuButtonAirOptions:AddOption("Gunship",function() SpawnOrder("Gunship") end )
+    MenuButtonAirOptions:AddOption("Dropship",function() SpawnOrder("Dropship") end )
+    MenuButtonAirOptions:Open() -- Open the menu AFTER adding your options
+	MenuButtonAirOptions:SetPos(MenuButtonAir:GetPos())
 
+end
+
+MenuButtonMachines = vgui.Create("DButton")
+MenuButtonMachines:SetText( "Machines" )
+MenuButtonMachines:SetPos(ScrW() * 0.42, ScrH() * 0.24)
+MenuButtonMachines:SetSize( 90, 30 )
+MenuButtonMachines.DoClick = function ( btn )
+    local MenuButtonMachinesOptions = DermaMenu() -- Creates the menu
+    MenuButtonMachinesOptions:AddOption("Turret",function() SpawnOrder("Turret") end ) -- Add options to the menu
+    MenuButtonMachinesOptions:AddOption("Ceiling Turret",function() SpawnOrder("CeilingTurret") end )
+    MenuButtonMachinesOptions:AddOption("Rollermine",function() SpawnOrder("Rollermine") end )
+	
+    MenuButtonMachinesOptions:Open() -- Open the menu AFTER adding your options
+	MenuButtonMachinesOptions:SetPos(MenuButtonMachines:GetPos())
+
+end
+MenuButtonMachines:SetVisible(false)
+MenuButtonAir:SetVisible(false)
+MenuButton:SetVisible(false)
 Squad2FollowMe:SetVisible(false)
 Squad2Regroup:SetVisible(false)	
 DisbandSquad2:SetVisible(false)
