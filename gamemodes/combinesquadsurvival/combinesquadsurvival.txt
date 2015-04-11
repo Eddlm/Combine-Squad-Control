@@ -47,6 +47,38 @@
 			"type"		"Numeric"
 			"default"	"300"
 		}
+		6
+		{
+			"name"		"cc_combine_nocollide"
+			"text"		"Disable combine collisions"
+			"help"		""
+			"type"		"CheckBox"
+			"default"	"0"
+		}
+		7
+		{
+			"name"		"cc_orders_key"
+			"text"		"Orders Key"
+			"help"		""
+			"type"		"Text"
+			"default"	"Q"
+		}
+		8
+		{
+			"name"		"cc_highlight_key"
+			"text"		"Highlight key"
+			"help"		""
+			"type"		"Text"
+			"default"	"X"
+		}
+		9
+		{
+			"name"		"cc_hlrenaissance"
+			"text"		"HL Renaissance NPCs"
+			"help"		""
+			"type"		"CheckBox"
+			"default"	"0"
+		}
 	}
 }
 

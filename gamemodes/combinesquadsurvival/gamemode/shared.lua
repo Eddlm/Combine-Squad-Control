@@ -3,7 +3,22 @@ GM.Author = "Eddlm"
 GM.Email = "eddmalaga@gmail.com"
 GM.Website = "http://facepunch.com/showthread.php?t=1391522"
 
-AllCombineEntities = {"npc_combine_s", "npc_metropolice","npc_hunter","npc_fassassin","npc_cremator","npc_rollermine"}
+
+HLRenaissance1 = {"monster_alien_controller","monster_alien_grunt","monster_alien_slave",}
+HLRenaissance2 = {"monster_gonome",}
+HLRenaissance3 = {"monster_bullchicken","npc_devilsquid","npc_frostsquid","monster_houndeye"}
+--,"monster_snark","monster_shocktrooper"
+HLRenaissanceBosses={"monster_gargantua","monster_bigmomma","monster_babygarg"}
+
+
+
+RelationshipIssuesSet={"npc_sniper"}
+RelationshipIssuesAddEntity={"npc_fassassin","npc_cremator"}
+NoRelationshipIssues={"npc_combine_s", "npc_metropolice","npc_hunter","npc_rollermine","npc_helicopter","npc_gunship","npc_manhack","npc_turret_floor","npc_turret_ceiling","npc_combinedropship"}
+
+CombineSoldiers = {"npc_combine_s", "npc_metropolice","npc_hunter","npc_fassassin","npc_cremator","npc_rollermine","npc_sniper"}
+CombineHelicopters = {"npc_helicopter","npc_gunship","npc_combinedropship"}
+AllCombineEntities = {"npc_combine_s", "npc_metropolice","npc_hunter","npc_fassassin","npc_cremator","npc_rollermine","npc_helicopter","npc_gunship","npc_manhack","npc_turret_floor","npc_turret_ceiling","npc_combinedropship","npc_sniper"}
 REBEL_WEAPONS = { "ai_weapon_crossbow","ai_weapon_smg1","ai_weapon_shotgun","ai_weapon_ar2"}
 
 Zombies = {"npc_headcrab_fast","npc_zombie","npc_fastzombie","npc_headcrab_black","npc_poisonzombie"}
@@ -20,19 +35,72 @@ SPAWNPOINTS = {
 
 function ISaid( ply, text, public )
 
-	--string.sub( text, 1, 4 ) == "/all"
 
     if text == "!soldier" and CountCombine() < GetConVarNumber("cc_max_combine") then
 		SpawnCombineS(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
 		return false
 	end
 
+	/*
+    if text == "!soldierrappel" and CountCombine() < GetConVarNumber("cc_max_combine") then
+		SpawnCombineSRappel(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
+		return false
+	end	
+	*/
     if text == "!shotgunner" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
 		SpawnCombineShotgunner(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
 		return false
 	end
-	
+    if text == "!deploysoldiers" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
+			for k, v in pairs(ents.FindByClass("npc_combinedropship")) do
+			SpawnCombineSRappel(v:GetPos()+Vector(50,0,-100),ply:EntIndex())
+			SpawnCombineSRappel(v:GetPos()+Vector(-50,0,-100),ply:EntIndex())
+			SpawnCombineSRappel(v:GetPos()+Vector(0,50,-100),ply:EntIndex())
+			SpawnCombineSRappel(v:GetPos()+Vector(0,-50,-100),ply:EntIndex())
 
+			end
+		return false
+	end
+    if text == "!deploymines"  then
+			for k, v in pairs(ents.FindByClass("npc_combinedropship")) do
+			v:Fire("DropMines",4,4)
+			end
+		return false 
+	end
+	
+    if text == "!helidismiss"  then
+			for k, v in pairs(ents.FindByClass("npc_combinedropship")) do
+			v:Remove()
+			end
+			for k, v in pairs(ents.FindByClass("npc_helicopter")) do
+			v:Remove()
+			end
+		return false 
+	end
+    if text == "!metrocop" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
+		SpawnMetropolice(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
+		return false
+	end	
+
+    if text == "!turret"  and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2)then
+		SpawnTurret(ply:GetEyeTraceNoCursor().HitPos,ply:GetAngles(),ply:EntIndex())
+		return false
+	end	
+	
+    if text == "!rollermine"  and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2)then
+		SpawnRollermine(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
+		return false
+	end	
+    if text == "!camera" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
+	traceRes = util.QuickTrace(ply:GetEyeTraceNoCursor().HitPos, Vector(0,0,200), player.GetAll())
+	if traceRes.Hit then
+		SpawnCeilingTurretStrong(ply:GetEyeTraceNoCursor().HitPos,ply:GetAngles(),ply:EntIndex())
+		return false
+		else 
+		ply:PrintMessage(HUD_PRINTTALK, "Combine Cameras can only spawn on a ceiling.") 
+		end
+	end	
+	
     if text == "!elite" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
 		SpawnCombineElite(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
 		return false
@@ -40,6 +108,18 @@ function ISaid( ply, text, public )
     if text == "!guard" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
 		SpawnCombinePrisonGuard(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
 		return false
+	end
+	
+    if text == "!dropship" and CountEntity("npc_combinedropship") < 1 then
+		SpawnDropship(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
+		return false
+		elseif CountEntity("npc_combinedropship")+CountEntity("npc_helicopter") > 0 then ply:PrintMessage(HUD_PRINTTALK, "Only one combine airship allowed for now, sorry.") 
+	end	
+    if text == "!helicopter" and CountEntity("npc_helicopter") < 1 then
+		SpawnHeli(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
+		return false
+		elseif CountEntity("npc_helicopter")+CountEntity("npc_combinedropship") > 0 then ply:PrintMessage(HUD_PRINTTALK, "Only one combine airship allowed for now, sorry.") 
+
 	end
 if IsMounted('ep2') then
     if text == "!hunter" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
@@ -77,7 +157,7 @@ end
 	    if text == "!zombies" and started != 1 then
 		ZombieWave()
 		PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Zombies are coming.") 
-		timer.Create( "ZombieWave", 5, 20, ZombieWave )
+		timer.Create( "ZombieWave", 2, 20, ZombieWave )
 		WaveNumber=WaveNumber+1
 		for k, v in pairs(player.GetAll()) do
 	v:GiveAmmo( 15, "Buckshot", true )
@@ -89,7 +169,7 @@ end
 		
 	    if text == "!antlions" and started != 1 then
 		PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Antlions are coming.") 
-		timer.Create( "AntLionWave", 5, 20, AntLionWave )
+		timer.Create( "AntLionWave", 2, 20, AntLionWave )
 		WaveNumber=WaveNumber+1
 		for k, v in pairs(player.GetAll()) do
 	v:GiveAmmo( 15, "Buckshot", true )
@@ -101,7 +181,7 @@ end
 		
 	    if text == "!rebels" and started != 1 then
 		PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Rebels are coming.") 
-		timer.Create( "RebelWave", 5, 20, RebelWave )
+		timer.Create( "RebelWave", 2, 20, RebelWave )
 		WaveNumber=WaveNumber+1
 		for k, v in pairs(player.GetAll()) do
 	v:GiveAmmo( 15, "Buckshot", true )
@@ -110,6 +190,59 @@ end
 		end
 		return false
 		end
+
+	if	GetConVarNumber("cc_hlrenaissance") == 1 then
+		    if text == "!hlrenaissance1" and started != 1 then
+		PrintMessage(HUD_PRINTTALK, "[Overwatch]: Done.") 
+		timer.Create( "hlrenaissance1", 2, 20, hlrenaissance1 )
+		WaveNumber=WaveNumber+1
+		for k, v in pairs(player.GetAll()) do
+			v:GiveAmmo( 15, "Buckshot", true )
+			v:GiveAmmo( 150, "AR2", true )
+			v:GiveAmmo( 1, "Grenade", true )	
+		end
+		return false
+		end	
+		    if text == "!hlrenaissance2" and started != 1 then
+		PrintMessage(HUD_PRINTTALK, "[Overwatch]: Done.") 
+		timer.Create( "hlrenaissance2", 2, 20, hlrenaissance1 )
+		WaveNumber=WaveNumber+1
+		for k, v in pairs(player.GetAll()) do
+			v:GiveAmmo( 15, "Buckshot", true )
+			v:GiveAmmo( 150, "AR2", true )
+			v:GiveAmmo( 1, "Grenade", true )	
+		end
+		return false
+		end	
+		    if text == "!hlrenaissance3" and started != 1 then
+		PrintMessage(HUD_PRINTTALK, "[Overwatch]: Done.") 
+		timer.Create( "hlrenaissance3", 2, 20, hlrenaissance3 )
+		WaveNumber=WaveNumber+1
+		for k, v in pairs(player.GetAll()) do
+			v:GiveAmmo( 15, "Buckshot", true )
+			v:GiveAmmo( 150, "AR2", true )
+			v:GiveAmmo( 1, "Grenade", true )	
+		end
+		return false
+		end	
+
+			   if text == "!hlrenaissanceboss" and started != 1 then
+		PrintMessage(HUD_PRINTTALK, "[Overwatch]: Done.") 
+		timer.Create( "hlrenaissanceboss", 2, 1, hlrenaissanceboss )
+		WaveNumber=WaveNumber+1
+		for k, v in pairs(player.GetAll()) do
+			v:GiveAmmo( 15, "Buckshot", true )
+			v:GiveAmmo( 150, "AR2", true )
+			v:GiveAmmo( 1, "Grenade", true )	
+		end
+		return false
+		end	
+		
+		
+		end
+		
+	if string.sub( text, 1, 1 ) == "!" then return false end
+
 end	
 hook.Add( "PlayerSay", "ISaid", ISaid )
 

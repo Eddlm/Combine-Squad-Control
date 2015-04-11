@@ -1,9 +1,12 @@
 AddCSLuaFile( "shared.lua" )
 include( "shared.lua" )
 
+
+highlightkey = 2
+orderskey= 2
 localownerid=1
 canshow=1
-
+outlinestoggle=1
 squad2=false
 squad2holdingposition=0
 squad2followingyou=0
@@ -34,19 +37,24 @@ net.Receive( "PlayerKillNotice", function( len, ply )
 end)
 
 hook.Add( "PreDrawHalos", "AddHalos", function()
-	if LocalPlayer():Alive() and LocalPlayer():GetPos() then
-		for k, v in pairs(ents.FindInSphere(LocalPlayer():GetEyeTraceNoCursor().HitPos, 1024)) do
+	if LocalPlayer() and LocalPlayer():GetPos()  then
+		for k, v in pairs(ents.GetAll()) do
 			if table.HasValue(AllCombineEntities, v:GetClass())  then
 				if v:GetNWString("selected") == "1" and v:GetNWString("owner") == tostring(localownerid) then
-						halo.Add( {v}, Color( 200,0,0 ), 1, 1, 1, true, true )
+						halo.Add( {v}, Color( 255,255,255 ), 1, 1, 1, true, true )
+				elseif v:GetNWString("Squad") == "squad1" and v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown(GetConVarNumber("cc_highlight_key") ) then
+						halo.Add( {v}, Color( 150,0,0 ), 1, 1, 1, true, true )
+						
+				elseif v:GetNWString("Squad") == "squad2" and v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown(GetConVarNumber("cc_highlight_key") ) then
+						halo.Add( {v}, Color( 0,0,150 ), 1, 1, 1, true, true )
+						
+				elseif v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown( GetConVarNumber("cc_highlight_key") ) then
+						halo.Add( {v}, Color( 100,100,100 ), 1, 1, 1, true, true )				
 				end
 			end
 		end
 	end
 end)
-
-
-
 
 hook.Add( "HUDPaint", "HuntHud", function()
 local color = Color( 0,255,0 )
@@ -95,8 +103,9 @@ end)
 
 
 hook.Add("Tick", "KeyDown_Test", function()
---print("__________")
-if input.IsKeyDown( KEY_Q ) then
+
+
+if input.IsKeyDown( GetConVarNumber("cc_orders_key") ) then
 gui.EnableScreenClicker(true)		
 	if canshow==1 then
 		canshow=0
@@ -109,16 +118,18 @@ gui.EnableScreenClicker(true)
 			SelectedHoldPosition:SetVisible(true)
 			UnselectAll:SetVisible(true)
 			SquadFollowMe:SetVisible(true)
-DisbandSquad:SetVisible(true)
-FormSquadFromSelected:SetVisible(true)
-SquadRegroup:SetVisible(true)		
-SelectAllNonSelected:SetVisible(true)		
-Squad2FollowMe:SetVisible(true)
-Squad2Regroup:SetVisible(true)	
-DisbandSquad2:SetVisible(true)
-FormSquad2FromSelected:SetVisible(true)
-Squad2GoHere:SetVisible(true)
-Squad2HoldPosition:SetVisible(true)	
+			DisbandSquad:SetVisible(true)
+			FormSquadFromSelected:SetVisible(true)
+			SquadRegroup:SetVisible(true)		
+			SelectAllNonSelected:SetVisible(true)		
+			Squad2FollowMe:SetVisible(true)
+			Squad2Regroup:SetVisible(true)	
+			DisbandSquad2:SetVisible(true)
+			FormSquad2FromSelected:SetVisible(true)
+			Squad2GoHere:SetVisible(true)
+			Squad2HoldPosition:SetVisible(true)	
+			MenuButton:SetVisible(true)
+
 	end
 
 elseif canshow==0 then 
@@ -132,19 +143,21 @@ canshow=1
 			SelectedHoldPosition:SetVisible(false)
 			UnselectAll:SetVisible(false)
 			SquadFollowMe:SetVisible(false)
-DisbandSquad:SetVisible(false)
-FormSquadFromSelected:SetVisible(false)
-SquadRegroup:SetVisible(false)	
-SelectAllNonSelected:SetVisible(false)		
-	Squad2FollowMe:SetVisible(false)
-Squad2Regroup:SetVisible(false)	
-DisbandSquad2:SetVisible(false)
-FormSquad2FromSelected:SetVisible(false)
-Squad2GoHere:SetVisible(false)
-Squad2HoldPosition:SetVisible(false)	
+			DisbandSquad:SetVisible(false)
+			FormSquadFromSelected:SetVisible(false)
+			SquadRegroup:SetVisible(false)	
+			SelectAllNonSelected:SetVisible(false)		
+			Squad2FollowMe:SetVisible(false)
+			Squad2Regroup:SetVisible(false)	
+			DisbandSquad2:SetVisible(false)
+			FormSquad2FromSelected:SetVisible(false)
+			Squad2GoHere:SetVisible(false)
+			Squad2HoldPosition:SetVisible(false)
+			MenuButton:SetVisible(false)
 
-end
+	end
 end)
+
 
 
 function OrdersMenu()
@@ -167,6 +180,9 @@ if DisbandSquad2 then DisbandSquad2:Remove() end
 if FormSquad2FromSelected then FormSquad2FromSelected:Remove() end
 if Squad2GoHere then Squad2GoHere:Remove() end
 if Squad2HoldPosition then Squad2HoldPosition:Remove() end
+if MenuButton then MenuButton:Remove() end
+
+
 
 		Regroup = vgui.Create( "DButton" )
 		Regroup:SetPos( ScrW() * 0.48, ScrH() * 0.52 )
@@ -386,8 +402,29 @@ UnselectAll = vgui.Create( "DButton" )
 			--net.WriteEntity( LocalPlayer())
 			net.SendToServer()
 		end
+
+
+MenuButton = vgui.Create("DButton")
+MenuButton:SetText( "Reinforcements" )
+MenuButton:SetPos(ScrW() * 0.48, ScrH() * 0.24)
+MenuButton:SetSize( 90, 30 )
+MenuButton.DoClick = function ( btn )
+    local MenuButtonOptions = DermaMenu() -- Creates the menu
+    MenuButtonOptions:AddOption("Soldier",function() SpawnOrder("Soldier") end ) -- Add options to the menu
+    MenuButtonOptions:AddOption("Shotgunner",function() SpawnOrder("Shotgunner") end )
+    MenuButtonOptions:AddOption("Elite",function() SpawnOrder("Elite") end)
+    MenuButtonOptions:AddOption("Guard", function() SpawnOrder("Guard") end)
+    MenuButtonOptions:AddOption("Metrocop",function() SpawnOrder("Metrocop") end )
+    MenuButtonOptions:AddOption("Sniper",function() SpawnOrder("Sniper") end )
+
+    MenuButtonOptions:Open() -- Open the menu AFTER adding your options
+	MenuButtonOptions:SetPos(MenuButton:GetPos())
+
+end
+
 		
-		
+MenuButton:SetVisible(false)
+
 Squad2FollowMe:SetVisible(false)
 Squad2Regroup:SetVisible(false)	
 DisbandSquad2:SetVisible(false)
@@ -411,7 +448,12 @@ SelectAllNonSelected:SetVisible(false)
 end
 timer.Simple(1,OrdersMenu)
 
+function SpawnOrder(selection)
+		net.Start("SpawnRequest")
+		net.WriteString(selection)
+		net.SendToServer()
 
+end
 
 function GM:HUDDrawTargetID()
 
@@ -472,10 +514,11 @@ y = y + h + 5
 if (trace.Entity:GetNWString("Squad") == "no") then
 	text = "No Squad"
 	font = "TargetIDSmall"
-elseif (trace.Entity:GetNWString("Squad") == "yes") then
+elseif (trace.Entity:GetNWString("Squad") == "squad1") then
 	text = "Squad Alpha"
 elseif (trace.Entity:GetNWString("Squad") == "squad2") then
 	text = "Squad Bravo"
+	else text = ""
 end
 
 surface.SetFont( font )
