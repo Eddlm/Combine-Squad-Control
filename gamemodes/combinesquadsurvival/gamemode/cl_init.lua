@@ -42,13 +42,13 @@ hook.Add( "PreDrawHalos", "AddHalos", function()
 			if table.HasValue(AllCombineEntities, v:GetClass())  then
 				if v:GetNWString("selected") == "1" and v:GetNWString("owner") == tostring(localownerid) then
 						halo.Add( {v}, Color( 255,255,255 ), 1, 1, 1, true, true )
-				elseif v:GetNWString("Squad") == "squad1" and v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown(GetConVarNumber("cc_highlight_key") ) then
+				elseif v:GetNWString("Squad") == "squad1" and v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown(GetConVarNumber("css_highlight_key") ) then
 						halo.Add( {v}, Color( 150,0,0 ), 1, 1, 1, true, true )
 						
-				elseif v:GetNWString("Squad") == "squad2" and v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown(GetConVarNumber("cc_highlight_key") ) then
+				elseif v:GetNWString("Squad") == "squad2" and v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown(GetConVarNumber("css_highlight_key") ) then
 						halo.Add( {v}, Color( 0,0,150 ), 1, 1, 1, true, true )
 						
-				elseif v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown( GetConVarNumber("cc_highlight_key") ) then
+				elseif v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown( GetConVarNumber("css_highlight_key") ) then
 						halo.Add( {v}, Color( 100,100,100 ), 1, 1, 1, true, true )				
 				end
 			end
@@ -109,7 +109,7 @@ end)
 hook.Add("Tick", "KeyDown_Test", function()
 
 
-if input.IsKeyDown( GetConVarNumber("cc_orders_key") ) then
+if input.IsKeyDown( GetConVarNumber("css_orders_key") ) then
 gui.EnableScreenClicker(true)		
 	if canshow==1 then
 		canshow=0

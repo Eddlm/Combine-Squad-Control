@@ -23,6 +23,14 @@ util.AddNetworkString( "PlayerKillNotice" )
 util.AddNetworkString( "SpawnRequest" )
 
 
+util.PrecacheModel("models/Combine_Soldier.mdl")
+util.PrecacheModel("models/Combine_Super_Soldier.mdl")
+util.PrecacheModel("models/Police.mdl")
+util.PrecacheModel("models/zombie/classic.mdl")
+util.PrecacheModel("models/zombie/fast.mdl")
+util.PrecacheModel("models/zombie/poison.mdl")
+
+
 
 net.Receive( "SpawnRequest", function( length, client )
 local data = net.ReadString()
@@ -45,10 +53,17 @@ if data == "Sniper" then SpawnSniper(client:GetEyeTraceNoCursor().HitPos+Vector(
 end
 
 if data == "Helicopter" and CountAirUnits() < 1 then SpawnHeli(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
+
+elseif  data == "Helicopter" and CountAirUnits() > 0 then 
+client:PrintMessage(HUD_PRINTTALK, "Dismiss the existing air unit before requesting another.") 	
 end
 if data == "Gunship" and CountAirUnits() < 1 then SpawnGunship(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
+elseif data == "Gunship" and CountAirUnits() > 0 then 
+client:PrintMessage(HUD_PRINTTALK, "Dismiss the existing air unit before requesting another.") 	
 end
 if data == "Dropship" and CountAirUnits() < 1 then SpawnDropship(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
+elseif data == "Dropship" and CountAirUnits() > 0 then 
+client:PrintMessage(HUD_PRINTTALK, "Dismiss the existing air unit before requesting another.") 	
 end
 
 if data == "Turret" then SpawnTurret(client:GetEyeTraceNoCursor().HitPos,client:GetAngles(),client:EntIndex()) 
@@ -72,7 +87,12 @@ end
 if data == "Mortar" then
 	local vector = client:GetEyeTraceNoCursor().HitPos
 
-	timer.Simple(1,function() SpawnCanister(vector) end)
+	timer.Simple(2,function() SpawnCanister(vector) end)
+	timer.Simple(3,function() SpawnCanister(vector+Vector(100,100,0)) end)
+	timer.Simple(4,function() SpawnCanister(vector+Vector(-100,-100,0)) end)
+	timer.Simple(5,function() SpawnCanister(vector+Vector(100,-100,0)) end)
+	timer.Simple(6,function() SpawnCanister(vector+Vector(-100,100,0)) end)
+
 	client:EmitSound("npc/combine_soldier/vo/overwatchrequestskyshield.wav")
 	PrintMessage(HUD_PRINTTALK, "[Overwatch]: Requested mortar round at "..tostring(client:GetEyeTraceNoCursor().HitPos).."") 
 end
@@ -185,7 +205,7 @@ function hlrenaissance1()
 --PrintMessage(HUD_PRINTTALK, "RebelWave")
 
 	table.foreach(HLRenaissance1, function(key,value)
-		if CountEntity(value) < 5+WaveNumber then
+		if CountEntity(value) < 2+WaveNumber then
 		SpawnBasicNPC(table.Random(combinespawnzones),value)
 		end
 	end)
@@ -195,7 +215,7 @@ function hlrenaissance2()
 --PrintMessage(HUD_PRINTTALK, "RebelWave")
 
 	table.foreach(HLRenaissance2, function(key,value)
-		if CountEntity(value) < 5+WaveNumber then
+		if CountEntity(value) < 2+WaveNumber then
 		SpawnBasicNPC(table.Random(combinespawnzones),value)
 		end
 	end)
@@ -206,7 +226,7 @@ function hlrenaissance3()
 --PrintMessage(HUD_PRINTTALK, "RebelWave")
 
 	table.foreach(HLRenaissance3, function(key,value)
-		if CountEntity(value) < 5+WaveNumber then
+		if CountEntity(value) < 2+WaveNumber then
 		SpawnBasicNPC(table.Random(combinespawnzones),value)
 		end
 	end)
@@ -283,7 +303,7 @@ end
 
 function GM:Think()
 
- if CurTime() > gamemodetime+GetConVarNumber("cc_think_cycle") then
+ if CurTime() > gamemodetime+GetConVarNumber("css_think_cycle") then
 gamemodetime = CurTime()
 
 	for k, v in pairs(ents.FindByClass("path_track")) do
@@ -320,12 +340,12 @@ gamemodetime = CurTime()
 
 				if v:GetNWVector("HoldPosition") != "NO_VECTOR"  then
 					if v:GetNWString("Squad") == "no" then
-						if v:GetPos():Distance(v:GetNWVector("HoldPosition")) > GetConVarNumber("cc_hold_position_tolerance") and !v:IsCurrentSchedule(50) then
+						if v:GetPos():Distance(v:GetNWVector("HoldPosition")) > GetConVarNumber("css_hold_position_tolerance") and !v:IsCurrentSchedule(50) then
 							v:SetLastPosition(v:GetNWVector("HoldPosition"))
 							v:SetSchedule(SCHED_FORCED_GO_RUN)			
 						end
 					else			
-						if v:GetPos():Distance(v:GetNWVector("HoldPosition")) > GetConVarNumber("cc_hold_position_tolerance") and !v:IsCurrentSchedule(50) then
+						if v:GetPos():Distance(v:GetNWVector("HoldPosition")) > GetConVarNumber("css_hold_position_tolerance") and !v:IsCurrentSchedule(50) then
 							v:SetLastPosition(v:GetNWVector("HoldPosition"))
 							v:SetSchedule(SCHED_FORCED_GO_RUN)			
 						end			
@@ -835,9 +855,20 @@ function GM:PlayerSpawn(ply)
     ply:SetCustomCollisionCheck(true)
 	ply:StripAmmo()
 	ply:StripWeapons()
+	
+	if GetConVarString("css_player_loadout") == "" then else
+			print("[Combine Squad Survival]: Loaded "..GetConVarString("css_player_loadout").." for the players at start.")
+			local sentence = ""..GetConVarString("css_player_loadout")..""
+			local words = string.Explode( ",", sentence )
+		table.foreach(words, function(key,value)
+			ply:Give(value)
+		end)
+	end
+	/*
 	ply:Give("weapon_shotgun")
 	ply:Give("weapon_ar2")
 	ply:Give("weapon_frag")
+	*/
 	ply:GiveAmmo( 15, "Buckshot", true )
 	ply:GiveAmmo( 150, "AR2", true )
 	ply:GiveAmmo( 1, "Grenade", true )		
@@ -868,14 +899,13 @@ end
 	entity:SetNWString("FollowMe", "no")
 	entity:SetNWString("Squad", "")
 	--entity:SetKeyValue("squadname", "")
-	if GetConVarNumber("cc_combine_nocollide") == 1 then
+	if GetConVarNumber("css_combine_nocollide") == 1 then
 	entity:SetCollisionGroup(3)
 	end
 elseif entity:IsNPC() then
 	if entity:GetClass() == "npc_headcrab_fast" then entity:SetName("Fast Headcrab") end
 	if entity:GetClass() == "npc_headcrab" then entity:SetName("Headcrab") end
 	if entity:GetClass() == "npc_zombine" then entity:SetName("Zombine") end
-
 	if entity:GetClass() == "npc_zombie" then entity:SetName("Zombie") end
 	if entity:GetClass() == "npc_fastzombie" then entity:SetName("Fast Zombie") end
 	if entity:GetClass() == "npc_headcrab_black" then entity:SetName("Poison Headcrab") end
@@ -886,7 +916,6 @@ elseif entity:IsNPC() then
 	if entity:GetClass() == "npc_headcrab" then entity:SetName("Headcrab") end
 	entity:SetCollisionGroup(3)
 	entity:AddRelationship( "player D_HT 20" )
-	--entity:Fire ( "SetRelationship", "player D_HT" )
 
 	table.foreach(AllCombineEntities, function(key,value)
 		entity:AddRelationship( ""..value.." D_HT 20" )
@@ -924,14 +953,6 @@ function SpawnSniper( pos, ang,owner )
 	end)	
 
 end
-/*
-monster_bigmomma
-npc_devilsquid
-npc_frostsquid
-monster_hwgrunt
-monster_gargantua
-
-*/
 
 function SpawnCeilingTurretStrong( pos, ang,owner )
 	NPC = ents.Create( "npc_turret_ceiling" )
@@ -960,12 +981,12 @@ end
 function SpawnMetropolice( pos, owner )
 	NPC = ents.Create( "npc_metropolice" )
 	NPC:SetKeyValue("Manhacks", 1) 
-	NPC:SetKeyValue( "model", "models/Police.mdl" )
+	NPC:SetKeyValue( "model", ""..GetConVarString("css_metrocop_model").."" )
 	NPC:SetPos( pos )
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
 	NPC:SetKeyValue( "spawnflags", 512 )
 	NPC:SetKeyValue("squadname", "Combine")
-	if GetConVarNumber("cc_use_NPC_PACK_weapons") == 1 then
+	if GetConVarNumber("css_use_NPC_PACK_weapons") == 1 then
 		NPC:Give(""..table.Random(NPC_WEAPON_PACK_2_RAPID_FIRE).."")
 	else
 	NPC:Give("ai_weapon_smg1")
@@ -993,7 +1014,7 @@ function SpawnCombineSRappel( pos,owner )
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
 	NPC:SetKeyValue( "waitingtorappel", 1 )
 	NPC:SetKeyValue( "spawnflags", 512 )
-	if GetConVarNumber("cc_use_NPC_PACK_weapons") == 1 then
+	if GetConVarNumber("css_use_NPC_PACK_weapons") == 1 then
 		NPC:Give(""..table.Random(NPC_WEAPON_PACK_2_RAPID_FIRE).."")
 	else
 	NPC:Give("ai_weapon_ar2")
@@ -1019,10 +1040,11 @@ function SpawnCombineS( pos,owner )
 	NPC = ents.Create( "npc_combine_s" )
 	NPC:SetKeyValue("NumGrenades", "2") 
 	NPC:SetPos( pos )
+	NPC:SetKeyValue( "model",""..GetConVarString("css_soldier_model").."")
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
 	NPC:SetKeyValue( "spawnflags", 512 )
 	NPC:Spawn()
-	if GetConVarNumber("cc_use_NPC_PACK_weapons") == 1 then
+	if GetConVarNumber("css_use_NPC_PACK_weapons") == 1 then
 		NPC:Give(""..table.Random(NPC_WEAPON_PACK_2_RAPID_FIRE).."")
 	else
 	NPC:Give("ai_weapon_ar2")
@@ -1047,11 +1069,16 @@ function SpawnCombineShotgunner ( pos,owner )
 	NPC = ents.Create( "npc_combine_s" )
 	NPC:SetKeyValue("NumGrenades", "5") 
 	NPC:SetPos( pos )
+	if GetConVarString("css_guard_model") == "models/Combine_Soldier.mdl" then
 	NPC:SetSkin(1)
+	else
+	NPC:SetKeyValue( "model",""..GetConVarString("css_shotgunner_model").."")
+	end
+
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
 	NPC:SetKeyValue( "spawnflags", 512 )
 	NPC:Spawn()
-	if GetConVarNumber("cc_use_NPC_PACK_weapons") == 1 then
+	if GetConVarNumber("css_use_NPC_PACK_weapons") == 1 then
 		NPC:Give(""..table.Random(NPC_WEAPON_PACK_2_SHOTGUNS).."")
 	else
 	NPC:Give("ai_weapon_shotgun")	
@@ -1071,16 +1098,24 @@ function SpawnCombineShotgunner ( pos,owner )
 	--NPC:Fire("StartPatrolling","",0)
 end
 
+concommand.Add("rpg_fire",function() 
+   local r = ents.Create("rpg_missile")
+   r:SetPos(player.GetByID(1):GetShootPos() + player.GetByID(1):GetForward() * 72 )
+   r:SetAngles( player.GetByID(1):GetAngles() )
+	r:SetOwner(player.GetByID(1) )
+   r:Spawn()
+   r:SetVelocity( r:GetForward() * 9001 )
+end)
 
 function SpawnCombineElite( pos,owner )
 	NPC = ents.Create( "npc_combine_s" )
 	NPC:SetKeyValue("NumGrenades", "1") 
-	NPC:SetKeyValue( "model", "models/Combine_Super_Soldier.mdl" )
+	NPC:SetKeyValue( "model",""..GetConVarString("css_elite_model").."")
 	NPC:SetPos( pos )
 	NPC:SetKeyValue( "spawnflags", 768 )
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
 	NPC:Spawn()
-	if GetConVarNumber("cc_use_NPC_PACK_weapons") == 1 then
+	if GetConVarNumber("css_use_NPC_PACK_weapons") == 1 then
 		NPC:Give(""..table.Random(NPC_WEAPON_PACK_2_RAPID_FIRE).."")
 	else
 	NPC:Give( "ai_weapon_ar2" )
@@ -1130,12 +1165,12 @@ end
 function SpawnCombinePrisonGuard( pos,owner )
 	NPC = ents.Create( "npc_combine_s" )
 	NPC:SetKeyValue("NumGrenades", "1") 
-	NPC:SetKeyValue( "model", "models/Combine_Soldier_PrisonGuard.mdl" )
+	NPC:SetKeyValue( "model",""..GetConVarString("css_guard_model").."")
 	NPC:SetPos( pos )
 	NPC:SetKeyValue( "spawnflags", 512+256 )
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
 	NPC:Spawn()
-	if GetConVarNumber("cc_use_NPC_PACK_weapons") == 1 then
+	if GetConVarNumber("css_use_NPC_PACK_weapons") == 1 then
 		NPC:Give(""..table.Random(NPC_WEAPON_PACK_2_RPGS).."")
 	else
 	NPC:Give( "ai_weapon_crossbow" )
@@ -1164,7 +1199,7 @@ function SpawnRebel(pos)
 	NPC:SetKeyValue("spawnflags", 8+256+512)
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
 	NPC:Spawn()
-	if GetConVarNumber("cc_use_NPC_PACK_weapons") == 1 then
+	if GetConVarNumber("css_use_NPC_PACK_weapons") == 1 then
 	NPC:Give(""..table.Random(NPC_WEAPON_PACK_2_ALL).."")
 	else
 	NPC:Give(table.Random(REBEL_WEAPONS))
@@ -1245,13 +1280,17 @@ end
 
 function GM:EntityTakeDamage(damaged,damage)
 --if damaged:Health() < 1 and damaged:IsNPC() then damaged:Remove() end
-damage:ScaleDamage(GetConVarNumber("cc_damage_multiplier"))
+damage:ScaleDamage(GetConVarNumber("css_damage_multiplier"))
 
 
 
 if table.HasValue(AllCombineEntities, damaged:GetClass()) then 
+
+if damaged:GetClass() == "npc_sniper" then
+damaged:SetHealth(damaged:Health()-damage:GetDamage())
+end
 print(damage:GetDamageType())
-if damage:IsDamageType(   DMG_SLASH   ) then
+if damage:IsDamageType(   DMG_SLASH   ) and damaged:Health() < 50 then
 damaged:SetSchedule(SCHED_MOVE_AWAY)
 end
 if table.HasValue(AllCombineEntities, damage:GetAttacker():GetClass()) then
@@ -1455,7 +1494,7 @@ function SpawnDropship( pos,owner)
 end
 
 
- 
+
 
 
 
@@ -1463,14 +1502,14 @@ end
 function SpawnCanister( pos )
 
 	traceRes = util.QuickTrace(pos, Vector(0,0,2000), player.GetAll())
-	print(traceRes.Entity)
+	--print(traceRes.Entity)
 	if traceRes.Entity == NULL or traceRes.HitSky then 
 		print("[The Hunt]: Place is suitable for canister deployment ")	
 		local canister = ents.Create( "env_headcrabcanister" )
-			canister:SetAngles(Angle(-70,math.random(180,-180),0))
+			canister:SetAngles(Angle(-70,0,0))
 			canister:SetPos(pos)
 			canister:SetKeyValue( "HeadcrabType", math.random(0,2) )
-			canister:SetKeyValue( "HeadcrabCount", math.random(3,6) )
+			canister:SetKeyValue( "HeadcrabCount", /*math.random(3,6)*/ 0 )
 			canister:SetKeyValue( "FlightSpeed", "8000" )
 			canister:SetKeyValue( "FlightTime", "3" )
 			canister:SetKeyValue( "StartingHeight", "0" )

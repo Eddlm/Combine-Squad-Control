@@ -9,7 +9,7 @@
 	{
 		1
 		{
-			"name"		"cc_damage_multiplier"
+			"name"		"css_damage_multiplier"
 			"text"		"Damage Multiplier"
 			"help"		""
 			"type"		"Numeric"
@@ -17,7 +17,7 @@
 		}
 		2
 		{
-			"name"		"cc_max_combine"
+			"name"		"css_max_combine"
 			"text"		"Combine Limit"
 			"help"		""
 			"type"		"Numeric"
@@ -25,7 +25,7 @@
 		}
 		3
 		{
-			"name"		"cc_use_NPC_PACK_weapons"
+			"name"		"css_use_NPC_PACK_weapons"
 			"text"		"Use NPC Weapon Pack 2"
 			"help"		""
 			"type"		"CheckBox"
@@ -33,7 +33,7 @@
 		}
 		4
 		{
-			"name"		"cc_extra_beta_npcs"
+			"name"		"css_extra_beta_npcs"
 			"text"		"Use HL2 Beta SNPCs"
 			"help"		""
 			"type"		"CheckBox"
@@ -41,7 +41,7 @@
 		}
 		5
 		{
-			"name"		"cc_hold_position_tolerance"
+			"name"		"css_hold_position_tolerance"
 			"text"		"Hold Position Tolerance"
 			"help"		""
 			"type"		"Numeric"
@@ -49,7 +49,7 @@
 		}
 		6
 		{
-			"name"		"cc_combine_nocollide"
+			"name"		"css_combine_nocollide"
 			"text"		"Disable combine collisions"
 			"help"		""
 			"type"		"CheckBox"
@@ -57,7 +57,7 @@
 		}
 		7
 		{
-			"name"		"cc_orders_key"
+			"name"		"css_orders_key"
 			"text"		"Orders Key"
 			"help"		""
 			"type"		"Numeric"
@@ -65,7 +65,7 @@
 		}
 		8
 		{
-			"name"		"cc_highlight_key"
+			"name"		"css_highlight_key"
 			"text"		"Highlight Units key"
 			"help"		""
 			"type"		"Numeric"
@@ -73,7 +73,7 @@
 		}
 		9
 		{
-			"name"		"cc_hlrenaissance"
+			"name"		"css_hlrenaissance"
 			"text"		"HL Renaissance NPCs"
 			"help"		""
 			"type"		"CheckBox"
@@ -81,11 +81,59 @@
 		}
 		10
 		{
-			"name"		"cc_think_cycle"
+			"name"		"css_think_cycle"
 			"text"		"Think cycle time"
 			"help"		""
 			"type"		"Numeric"
 			"default"	"2"
+		}
+		11
+		{
+			"name"		"css_player_loadout"
+			"text"		"Player loadout"
+			"help"		""
+			"type"		"Text"
+			"default"	"weapon_shotgun,weapon_ar2,weapon_frag"
+		}
+		12
+		{
+			"name"		"css_elite_model"
+			"text"		"Combine Elite model"
+			"help"		""
+			"type"		"Text"
+			"default"	"models/Combine_Super_Soldier.mdl"
+		}
+		13
+		{
+			"name"		"css_soldier_model"
+			"text"		"Combine Soldier model"
+			"help"		""
+			"type"		"Text"
+			"default"	"models/Combine_Soldier.mdl"
+		}
+		14
+		{
+			"name"		"css_shotgunner_model"
+			"text"		"Combine Soldier model"
+			"help"		""
+			"type"		"Text"
+			"default"	"models/Combine_Soldier.mdl"
+		}
+		15
+		{
+			"name"		"css_guard_model"
+			"text"		"Combine Guard model"
+			"help"		""
+			"type"		"Text"
+			"default"	"models/Combine_Soldier_PrisonGuard.mdl"
+		}
+		16
+		{
+			"name"		"css_metrocop_model"
+			"text"		"Metrocop Model"
+			"help"		""
+			"type"		"Text"
+			"default"	"models/Police.mdl"
 		}
 	}
 }

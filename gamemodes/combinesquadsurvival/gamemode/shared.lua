@@ -36,7 +36,7 @@ SPAWNPOINTS = {
 function ISaid( ply, text, public )
 	
 
-    if text == "!deploysoldiers" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
+    if text == "!deploysoldiers" and CountCombine() < GetConVarNumber("css_max_combine")+( table.Count(player.GetAll())*2) then
 			for k, v in pairs(ents.FindByClass("npc_combinedropship")) do
 			SpawnCombineSRappel(v:GetPos()+Vector(50,0,-100),ply:EntIndex())
 			SpawnCombineSRappel(v:GetPos()+Vector(-50,0,-100),ply:EntIndex())
@@ -53,12 +53,12 @@ function ISaid( ply, text, public )
 		return false 
 	end
 
-if GetConVarNumber("cc_extra_beta_npcs") == 1 then
-    if text == "!assassin" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
+if GetConVarNumber("css_extra_beta_npcs") == 1 then
+    if text == "!assassin" and CountCombine() < GetConVarNumber("css_max_combine")+( table.Count(player.GetAll())*2) then
 		SpawnCombineAssasin(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
 		return false
 	end
-    if text == "!cremator" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
+    if text == "!cremator" and CountCombine() < GetConVarNumber("css_max_combine")+( table.Count(player.GetAll())*2) then
 		SpawnCombineCremator(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
 		return false
 	end
@@ -112,7 +112,7 @@ end
 		return false
 		end
 
-	if	GetConVarNumber("cc_hlrenaissance") == 1 then
+	if	GetConVarNumber("css_hlrenaissance") == 1 then
 		    if text == "!hlrenaissance1" and started != 1 then
 		PrintMessage(HUD_PRINTTALK, "[Overwatch]: Done.") 
 		timer.Create( "hlrenaissance1", 2, 20, hlrenaissance1 )
