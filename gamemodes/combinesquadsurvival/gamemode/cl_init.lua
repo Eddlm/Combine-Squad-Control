@@ -135,6 +135,8 @@ gui.EnableScreenClicker(true)
 			MenuButton:SetVisible(true)
 			MenuButtonAir:SetVisible(true)
 			MenuButtonMachines:SetVisible(true)
+			LaunMortar:SetVisible(true)
+			DismissAirUnits:SetVisible(true)
 
 	end
 
@@ -162,6 +164,8 @@ canshow=1
 			MenuButton:SetVisible(false)
 			MenuButtonAir:SetVisible(false)
 			MenuButtonMachines:SetVisible(false)
+			LaunMortar:SetVisible(false)
+			DismissAirUnits:SetVisible(false)
 
 	end
 end)
@@ -191,6 +195,8 @@ if Squad2HoldPosition then Squad2HoldPosition:Remove() end
 if MenuButton then MenuButton:Remove() end
 if MenuButtonAir then MenuButtonAir:Remove() end
 if MenuButtonMachines then MenuButtonMachines:Remove() end
+if LaunMortar then LaunMortar:Remove() end
+if DismissAirUnits then DismissAirUnits:Remove() end
 
 
 
@@ -413,7 +419,23 @@ UnselectAll = vgui.Create( "DButton" )
 			net.SendToServer()
 		end
 
+		LaunMortar = vgui.Create( "DButton" )
+		LaunMortar:SetPos( ScrW() * 0.48, ScrH() * 0.28 )
+		LaunMortar:SetText( "Request Mortar" )
+		LaunMortar:SetSize( 90, 30 )
+		LaunMortar.DoClick = function()
+			SpawnOrder("Mortar")
+		end
 
+		DismissAirUnits = vgui.Create( "DButton" )
+		DismissAirUnits:SetPos( ScrW() * 0.54, ScrH() * 0.28 )
+		DismissAirUnits:SetText( "Dismiss Air Units" )
+		DismissAirUnits:SetSize( 90, 30 )
+		DismissAirUnits.DoClick = function()
+			SpawnOrder("DismissAirUnits")
+		end
+		
+		
 MenuButton = vgui.Create("DButton")
 MenuButton:SetText( "Reinforcements" )
 MenuButton:SetPos(ScrW() * 0.48, ScrH() * 0.24)
@@ -463,6 +485,9 @@ MenuButtonMachines.DoClick = function ( btn )
 	MenuButtonMachinesOptions:SetPos(MenuButtonMachines:GetPos())
 
 end
+
+DismissAirUnits:SetVisible(false)
+LaunMortar:SetVisible(false)
 MenuButtonMachines:SetVisible(false)
 MenuButtonAir:SetVisible(false)
 MenuButton:SetVisible(false)

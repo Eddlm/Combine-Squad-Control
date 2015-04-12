@@ -69,6 +69,35 @@ end
 if data == "Rollermine" then SpawnRollermine(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,20),client:EntIndex()) 
 end
 
+if data == "Mortar" then
+	local vector = client:GetEyeTraceNoCursor().HitPos
+
+	timer.Simple(1,function() SpawnCanister(vector) end)
+	client:EmitSound("npc/combine_soldier/vo/overwatchrequestskyshield.wav")
+	PrintMessage(HUD_PRINTTALK, "[Overwatch]: Requested mortar round at "..tostring(client:GetEyeTraceNoCursor().HitPos).."") 
+end
+
+if data == "DismissAirUnits" then 
+
+			for k, v in pairs(ents.FindByClass("npc_combinedropship")) do
+			v:Remove()
+			PrintMessage(HUD_PRINTTALK, "[Overwatch]: The Air Unit has been dismissed.")
+
+			end
+			for k, v in pairs(ents.FindByClass("npc_helicopter")) do
+			v:Remove()
+			PrintMessage(HUD_PRINTTALK, "[Overwatch]: The Air Unit has been dismissed.")
+
+			end
+			for k, v in pairs(ents.FindByClass("npc_combinegunship")) do
+			v:Remove()
+			PrintMessage(HUD_PRINTTALK, "[Overwatch]: The Air Unit has been dismissed.")
+
+			end
+			
+end
+
+
 
 end)
 
@@ -254,7 +283,7 @@ end
 
 function GM:Think()
 
- if CurTime() > gamemodetime+2 then
+ if CurTime() > gamemodetime+GetConVarNumber("cc_think_cycle") then
 gamemodetime = CurTime()
 
 	for k, v in pairs(ents.FindByClass("path_track")) do
@@ -420,6 +449,8 @@ CanTalk=1
 			if targetTrace.HitPos:Distance(client:GetEyeTraceNoCursor().HitPos) < 500 then	correction=Vector(0,0, (targetTrace.HitPos:Distance(client:GetEyeTraceNoCursor().HitPos)-100)) print("correction") else correction=Vector(0,0,500) end
 			creating:SetPos(client:GetEyeTraceNoCursor().HitPos+correction)
 			creating:Spawn()			
+			v:SetNWVector("HoldPosition","NO_VECTOR")	
+			v:SetNWString("FollowMe","no")
 			v:Fire("SetTrack", "HeliTrack")
 			--v:Remove()
 			print(creating:GetName())
@@ -555,7 +586,9 @@ CanTalk=1
 			creating:SetName("HeliTrack")
 			if targetTrace.HitPos:Distance(client:GetEyeTraceNoCursor().HitPos) < 500 then	correction=Vector(0,0, (targetTrace.HitPos:Distance(client:GetEyeTraceNoCursor().HitPos)-100)) print("correction") else correction=Vector(0,0,500) end
 			creating:SetPos(client:GetEyeTraceNoCursor().HitPos+correction)
-			creating:Spawn()			
+			creating:Spawn()
+			v:SetNWVector("HoldPosition","NO_VECTOR")	
+			v:SetNWString("FollowMe","no")
 			v:Fire("SetTrack", "HeliTrack")
 			--v:Remove()
 			print(creating:GetName())
@@ -669,7 +702,8 @@ local attack=0
 			creating:SetPos(client:GetEyeTraceNoCursor().HitPos+correction)
 			creating:Spawn()			
 			v:Fire("SetTrack", "HeliTrack")
-			--v:Remove()
+			v:SetNWVector("HoldPosition","NO_VECTOR")	
+			v:SetNWString("FollowMe","no")
 			print(creating:GetName())
 			--timer.Simple(0.5,function() creating:Remove() end)
 			end
@@ -1214,6 +1248,7 @@ function GM:EntityTakeDamage(damaged,damage)
 damage:ScaleDamage(GetConVarNumber("cc_damage_multiplier"))
 
 
+
 if table.HasValue(AllCombineEntities, damaged:GetClass()) then 
 print(damage:GetDamageType())
 if damage:IsDamageType(   DMG_SLASH   ) then
@@ -1363,7 +1398,7 @@ function SpawnHeli( pos,owner)
 	NPC:SetNWString("Squad", "no")
 	NPC:SetKeyValue("squadname", "")
 	NPC:SetNWString("name","Helicopter")
-	NPC:SetHealth("500")
+	NPC:SetHealth("100")
 
 end
 function SpawnGunship( pos,owner)
@@ -1385,7 +1420,7 @@ function SpawnGunship( pos,owner)
 	NPC:SetNWString("Squad", "no")
 	NPC:SetKeyValue("squadname", "")
 	NPC:SetNWString("name","Gunship")
-	NPC:SetHealth("500")
+	NPC:SetHealth("100")
 
 end
 
@@ -1415,7 +1450,7 @@ function SpawnDropship( pos,owner)
 	NPC:SetNWString("Squad", "no")
 	NPC:SetKeyValue("squadname", "")
 	NPC:SetNWString("name","Dropship")
-	NPC:SetHealth("500")
+	NPC:SetHealth("200")
 
 end
 
@@ -1449,6 +1484,7 @@ function SpawnCanister( pos )
 		canister:Spawn()	
 		timer.Simple(100, function() canister:Remove() end)
 	else
-		print("[The Hunt]: Place is NOT suitable for canister deployment. Player is under a low ceiling.")	
+	PrintMessage(HUD_PRINTTALK, "[Overwatch]: Denied. Place is not reachable.") 
+
 	end
 end

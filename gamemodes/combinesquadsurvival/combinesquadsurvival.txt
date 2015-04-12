@@ -60,15 +60,15 @@
 			"name"		"cc_orders_key"
 			"text"		"Orders Key"
 			"help"		""
-			"type"		"Text"
+			"type"		"Numeric"
 			"default"	"27"
 		}
 		8
 		{
 			"name"		"cc_highlight_key"
-			"text"		"Highlight key"
+			"text"		"Highlight Units key"
 			"help"		""
-			"type"		"Text"
+			"type"		"Numeric"
 			"default"	"34"
 		}
 		9
@@ -78,6 +78,14 @@
 			"help"		""
 			"type"		"CheckBox"
 			"default"	"0"
+		}
+		10
+		{
+			"name"		"cc_think_cycle"
+			"text"		"Think cycle time"
+			"help"		""
+			"type"		"Numeric"
+			"default"	"2"
 		}
 	}
 }

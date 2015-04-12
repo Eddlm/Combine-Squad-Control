@@ -36,15 +36,6 @@ SPAWNPOINTS = {
 function ISaid( ply, text, public )
 	
 
-    if text == "!soldier"  then
-			SpawnCombineS(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
-		return false
-	end
-
-    if text == "!shotgunner" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
-		SpawnCombineShotgunner(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
-		return false
-	end
     if text == "!deploysoldiers" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
 			for k, v in pairs(ents.FindByClass("npc_combinedropship")) do
 			SpawnCombineSRappel(v:GetPos()+Vector(50,0,-100),ply:EntIndex())
@@ -61,69 +52,7 @@ function ISaid( ply, text, public )
 			end
 		return false 
 	end
-	
-    if text == "!helidismiss"  then
-			for k, v in pairs(ents.FindByClass("npc_combinedropship")) do
-			v:Remove()
-			end
-			for k, v in pairs(ents.FindByClass("npc_helicopter")) do
-			v:Remove()
-			end
-			for k, v in pairs(ents.FindByClass("npc_combinegunship")) do
-			v:Remove()
-			end
-		return false 
-	end
-    if text == "!metrocop" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
-		SpawnMetropolice(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
-		return false
-	end	
 
-    if text == "!turret"  and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2)then
-		SpawnTurret(ply:GetEyeTraceNoCursor().HitPos,ply:GetAngles(),ply:EntIndex())
-		return false
-	end	
-	
-    if text == "!rollermine"  and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2)then
-		SpawnRollermine(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
-		return false
-	end	
-    if text == "!camera" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
-	traceRes = util.QuickTrace(ply:GetEyeTraceNoCursor().HitPos, Vector(0,0,200), player.GetAll())
-	if traceRes.Hit then
-		SpawnCeilingTurretStrong(ply:GetEyeTraceNoCursor().HitPos,ply:GetAngles(),ply:EntIndex())
-		return false
-		else 
-		ply:PrintMessage(HUD_PRINTTALK, "Combine Cameras can only spawn on a ceiling.") 
-		end
-	end	
-	
-    if text == "!elite" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
-		SpawnCombineElite(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
-		return false
-	end
-    if text == "!guard" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
-		SpawnCombinePrisonGuard(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
-		return false
-	end
-	
-    if text == "!dropship" and CountAirUnits() < 1 then
-		SpawnDropship(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
-		return false
-		elseif CountEntity("npc_combinedropship")+CountEntity("npc_helicopter") > 0 then ply:PrintMessage(HUD_PRINTTALK, "Only one combine airship allowed for now, sorry.") 
-	end	
-    if text == "!helicopter" and CountAirUnits() < 1 then
-		SpawnHeli(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
-		return false
-		elseif CountEntity("npc_helicopter")+CountEntity("npc_combinedropship") > 0 then ply:PrintMessage(HUD_PRINTTALK, "Only one combine airship allowed for now, sorry.") 
-
-	end
-if IsMounted('ep2') then
-    if text == "!hunter" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
-		SpawnHunter(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
-		return false
-	end	
-end
 if GetConVarNumber("cc_extra_beta_npcs") == 1 then
     if text == "!assassin" and CountCombine() < GetConVarNumber("cc_max_combine")+( table.Count(player.GetAll())*2) then
 		SpawnCombineAssasin(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
@@ -145,12 +74,7 @@ end
 		timer.Remove( "AddonCycleLong")
 		return false
 		end
-    if text == "!mortar" then
-	timer.Simple(1,function() SpawnCanister(ply:GetEyeTraceNoCursor().HitPos) end)
-	ply:EmitSound("npc/combine_soldier/vo/overwatchrequestskyshield.wav")
-	PrintMessage(HUD_PRINTTALK, "[Overwatch]: Requested mortar round at "..tostring(ply:GetEyeTraceNoCursor().HitPos).."") 
-		return false
-	end
+		
 	    if text == "!zombies" and started != 1 then
 		ZombieWave()
 		PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Zombies are coming.") 
