@@ -17,11 +17,11 @@
 		}
 		2
 		{
-			"name"		"css_max_combine"
-			"text"		"Combine Limit"
+			"name"		"css_max_combine_per_player"
+			"text"		"Combine per player limit"
 			"help"		""
 			"type"		"Numeric"
-			"default"	"20"
+			"default"	"6"
 		}
 		3
 		{
@@ -60,16 +60,16 @@
 			"name"		"css_orders_key"
 			"text"		"Orders Key"
 			"help"		""
-			"type"		"Numeric"
-			"default"	"27"
+			"type"		"Text"
+			"default"	"KEY_Q"
 		}
 		8
 		{
 			"name"		"css_highlight_key"
 			"text"		"Highlight Units key"
 			"help"		""
-			"type"		"Numeric"
-			"default"	"34"
+			"type"		"Text"
+			"default"	"KEY_X"
 		}
 		9
 		{
@@ -135,6 +135,7 @@
 			"type"		"Text"
 			"default"	"models/Police.mdl"
 		}
+
 	}
 }
 

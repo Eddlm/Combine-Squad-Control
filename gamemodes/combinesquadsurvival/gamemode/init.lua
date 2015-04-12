@@ -36,21 +36,46 @@ net.Receive( "SpawnRequest", function( length, client )
 local data = net.ReadString()
 PrintMessage(HUD_PRINTTALK, net.ReadString())
 
+if CountPlayerCombine(client:EntIndex()) < GetConVarNumber("css_max_combine_per_player") 
+ then
+	if data == "Soldier" then SpawnCombineS(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
+	end
+	if data == "Shotgunner" then SpawnCombineShotgunner(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
+	end
+	if data == "Elite" then SpawnCombineElite(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
+	end
+	if data == "Guard" then SpawnCombinePrisonGuard(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
+	end
+	if data == "Metrocop" then SpawnMetropolice(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
+	end
+	
+	if data == "Sniper" then SpawnSniper(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:GetAngles(),client:EntIndex()) 
+	end
+	
+	
+	
+	if data == "Turret" then SpawnTurret(client:GetEyeTraceNoCursor().HitPos,client:GetAngles(),client:EntIndex()) 
+	end
+	
+	if data == "Hunter" then SpawnHunter(client:GetEyeTraceNoCursor().HitPos,client:EntIndex()) 
+	end
+	
+	if data == "CeilingTurret" then
+		traceRes = util.QuickTrace(client:GetEyeTraceNoCursor().HitPos, Vector(0,0,200), player.GetAll())
+		if traceRes.Hit then
+			SpawnCeilingTurretStrong(client:GetEyeTraceNoCursor().HitPos,client:GetAngles(),client:EntIndex())
+		else 
+			client:PrintMessage(HUD_PRINTTALK, "Combine Cameras can only spawn on a ceiling.") 	
+		end
+	end
+else
+			client:PrintMessage(HUD_PRINTTALK, "You have passed the combine-per-player limit ("..GetConVarNumber("css_max_combine_per_player")..")") 	
+end
+
+if data == "Rollermine" then SpawnRollermine(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,20),client:EntIndex()) 
+end
 
 
-if data == "Soldier" then SpawnCombineS(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
-end
-if data == "Shotgunner" then SpawnCombineShotgunner(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
-end
-if data == "Elite" then SpawnCombineElite(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
-end
-if data == "Guard" then SpawnCombinePrisonGuard(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
-end
-if data == "Metrocop" then SpawnMetropolice(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
-end
-
-if data == "Sniper" then SpawnSniper(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:GetAngles(),client:EntIndex()) 
-end
 
 if data == "Helicopter" and CountAirUnits() < 1 then SpawnHeli(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
 
@@ -64,24 +89,6 @@ end
 if data == "Dropship" and CountAirUnits() < 1 then SpawnDropship(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
 elseif data == "Dropship" and CountAirUnits() > 0 then 
 client:PrintMessage(HUD_PRINTTALK, "Dismiss the existing air unit before requesting another.") 	
-end
-
-if data == "Turret" then SpawnTurret(client:GetEyeTraceNoCursor().HitPos,client:GetAngles(),client:EntIndex()) 
-end
-
-if data == "Hunter" then SpawnHunter(client:GetEyeTraceNoCursor().HitPos,client:EntIndex()) 
-end
-
-if data == "CeilingTurret" then
-	traceRes = util.QuickTrace(client:GetEyeTraceNoCursor().HitPos, Vector(0,0,200), player.GetAll())
-	if traceRes.Hit then
-		SpawnCeilingTurretStrong(client:GetEyeTraceNoCursor().HitPos,client:GetAngles(),client:EntIndex())
-	else 
-		client:PrintMessage(HUD_PRINTTALK, "Combine Cameras can only spawn on a ceiling.") 	
-	end
-end
-
-if data == "Rollermine" then SpawnRollermine(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,20),client:EntIndex()) 
 end
 
 if data == "Mortar" then
@@ -164,6 +171,21 @@ local entities=0
 		end
 		return(entities)
 end
+
+
+function CountPlayerCombine(owner)
+local entities=0
+		for k, v in pairs(ents.GetAll()) do
+		if table.HasValue(AllCombineEntities, v:GetClass()) then
+		if v:GetNWString("owner") == ""..owner.."" then
+			entities=entities+1
+			print(v:GetClass())
+		end
+		end
+		end
+		return(entities)
+end
+
 function CountAirUnits()
 local entities=0
 		for k, v in pairs(ents.GetAll()) do
@@ -274,7 +296,7 @@ local randompl = d
 timer.Create( "AddonCycleLong", 20, 1, AddonCycleLong)
 --timer.Simple(20, AddonCycleLong )
 if CountEntity("npc_combine_s") > 1 then
-randompl = table.Random(ents.FindByClass("npc_combine_s"))
+randompl = table.Random(ents.FindByClass("npc_combine_s")) table.Random(ents.FindByClass("npc_metropolice")) table.Random(ents.FindByClass("npc_hunter")) table.Random(ents.FindByClass("npc_turret_floor"))
 else
 randompl = table.Random(ents.FindByClass("player"))
 end
@@ -370,8 +392,8 @@ end
 
 	if !v:CreatedByMap() and !table.HasValue(AllCombineEntities, v:GetClass()) and v:IsNPC() and !v:IsMoving() and !v:GetEnemy() then
 		if CountEntity("npc_combine_s") > 0 then
-			randompl = table.Random(ents.FindByClass("npc_combine_s"))
-			else
+		randompl = table.Random(ents.FindByClass("npc_combine_s"))
+		else
 			randompl = table.Random(ents.FindByClass("player"))
 		end
 		v:SetEnemy(randompl)
@@ -855,7 +877,8 @@ function GM:PlayerSpawn(ply)
     ply:SetCustomCollisionCheck(true)
 	ply:StripAmmo()
 	ply:StripWeapons()
-	
+	ply:SetCollisionGroup(11)
+
 	if GetConVarString("css_player_loadout") == "" then else
 			print("[Combine Squad Survival]: Loaded "..GetConVarString("css_player_loadout").." for the players at start.")
 			local sentence = ""..GetConVarString("css_player_loadout")..""
@@ -900,7 +923,7 @@ end
 	entity:SetNWString("Squad", "")
 	--entity:SetKeyValue("squadname", "")
 	if GetConVarNumber("css_combine_nocollide") == 1 then
-	entity:SetCollisionGroup(3)
+	entity:SetCollisionGroup(11)
 	end
 elseif entity:IsNPC() then
 	if entity:GetClass() == "npc_headcrab_fast" then entity:SetName("Fast Headcrab") end
@@ -914,8 +937,8 @@ elseif entity:IsNPC() then
 	if IsMounted("ep1") or IsMounted("ep2")then if math.random(1,2) == 1 then entity:SetKeyValue( "spawnflags", 262144 )  end end end
 	if entity:GetClass() == "npc_antlionguard" then entity:SetName("Antlion Guard") end
 	if entity:GetClass() == "npc_headcrab" then entity:SetName("Headcrab") end
-	entity:SetCollisionGroup(3)
 	entity:AddRelationship( "player D_HT 20" )
+	entity:SetCollisionGroup(3)
 
 	table.foreach(AllCombineEntities, function(key,value)
 		entity:AddRelationship( ""..value.." D_HT 20" )
@@ -1069,7 +1092,7 @@ function SpawnCombineShotgunner ( pos,owner )
 	NPC = ents.Create( "npc_combine_s" )
 	NPC:SetKeyValue("NumGrenades", "5") 
 	NPC:SetPos( pos )
-	if GetConVarString("css_guard_model") == "models/Combine_Soldier.mdl" then
+	if GetConVarString("css_shotgunner_model") == "models/Combine_Soldier.mdl" then
 	NPC:SetSkin(1)
 	else
 	NPC:SetKeyValue( "model",""..GetConVarString("css_shotgunner_model").."")
@@ -1289,7 +1312,7 @@ if table.HasValue(AllCombineEntities, damaged:GetClass()) then
 if damaged:GetClass() == "npc_sniper" then
 damaged:SetHealth(damaged:Health()-damage:GetDamage())
 end
-print(damage:GetDamageType())
+--print(damage:GetDamageType())
 if damage:IsDamageType(   DMG_SLASH   ) and damaged:Health() < 50 then
 damaged:SetSchedule(SCHED_MOVE_AWAY)
 end
