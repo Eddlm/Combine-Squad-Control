@@ -14,6 +14,11 @@ squad1holdingposition=0
 squad1followingyou=0
 squad1=false
 
+
+squad1numbers=0
+squad2numbers=0
+totalcombinenumber=0
+
 killicon.AddFont( "prop_physics",		"HL2MPTypeDeath",	"9",	Color( 255, 80, 0, 255 ) )
 killicon.AddFont( "ai_weapon_smg1",		"HL2MPTypeDeath",	"/",	Color( 255, 80, 0, 255 ) )
 killicon.AddFont( "ai_weapon_357",			"HL2MPTypeDeath",	".",	Color( 255, 80, 0, 255 ) )
@@ -42,18 +47,19 @@ hook.Add( "PreDrawHalos", "AddHalos", function()
 			if table.HasValue(AllCombineEntities, v:GetClass())  then
 				if v:GetNWString("selected") == "1" and v:GetNWString("owner") == tostring(localownerid) then
 						halo.Add( {v}, Color( 255,255,255 ), 1, 1, 1, true, true )
-				elseif v:GetNWString("Squad") == "squad1" and v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown(GetConVarString("css_highlight_key") ) then
+				elseif v:GetNWString("Squad") == "squad1" and v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown(KEY_X) then
 						halo.Add( {v}, Color( 150,0,0 ), 1, 1, 1, true, true )
 						
-				elseif v:GetNWString("Squad") == "squad2" and v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown(GetConVarString("css_highlight_key") ) then
+				elseif v:GetNWString("Squad") == "squad2" and v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown(KEY_X) then
 						halo.Add( {v}, Color( 0,0,150 ), 1, 1, 1, true, true )
 						
-				elseif v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown( GetConVarString("css_highlight_key") ) then
+				elseif v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown( KEY_X ) then
 						halo.Add( {v}, Color( 100,100,100 ), 1, 1, 1, true, true )				
 				end
 			end
 		end
 	end
+
 end)
 
 hook.Add( "HUDPaint", "HuntHud", function()
@@ -63,35 +69,33 @@ draw.DrawText( "·", "TargetIDsmall", ScrW() * 0.5, ScrH() * 0.49, Color(255,255
 end
 local color = Color( 0,255,0 )
 if squad1==false then color = Color( 255,0,0 ) else color = Color( 0,255,0 ) end
-draw.SimpleText( "Alpha", "TargetID", ScrW()/2.2, ScrH()/1.06,color)
+draw.SimpleText( "Alpha ("..squad1numbers..")", "TargetID", ScrW()/2.2, ScrH()/1.06,color, TEXT_ALIGN_CENTER)
 if squad2==false then color = Color( 255,0,0 ) else color = Color( 0,255,0 ) end
-draw.SimpleText( "Bravo", "TargetID", ScrW()/1.8, ScrH()/1.06, color)
+draw.SimpleText( "Bravo ("..squad2numbers..")", "TargetID", ScrW()/1.8, ScrH()/1.06, color, TEXT_ALIGN_CENTER)
 
 
-
+draw.DrawText( "Total: "..totalcombinenumber.."", "TargetIDsmall", ScrW()/2, ScrH()/1.06, Color(255,255,255), TEXT_ALIGN_CENTER )
 
 if squad2holdingposition==1 then
 	text = "Holding Position"
 else
 	text = "Not Holding Position"
 end
-draw.SimpleText( text, "TargetIDSmall", ScrW()/1.8, ScrH()/1.04, Color( 0,255,255 ))
-
+draw.SimpleText( text, "TargetIDSmall", ScrW()/1.8, ScrH()/1.04, Color( 0,255,255 ), TEXT_ALIGN_CENTER)
 
 if squad1holdingposition==1 then
 	text = "Holding Position"
 else
 	text = "Not Holding Position"
 end
-draw.SimpleText( text, "TargetIDSmall", ScrW()/2.2, ScrH()/1.04, Color( 0,255,255 ))
-
+draw.SimpleText( text, "TargetIDSmall", ScrW()/2.2, ScrH()/1.04, Color( 0,255,255 ), TEXT_ALIGN_CENTER)
 
 if squad2followingyou==1 then
 	text = "Following you"
 else
 	text = "Not Following you"
 end
-draw.SimpleText( text, "TargetIDSmall", ScrW()/1.8, ScrH()/1.02, Color( 0,255,255 ))
+draw.SimpleText( text, "TargetIDSmall", ScrW()/1.8, ScrH()/1.02, Color( 0,255,255 ), TEXT_ALIGN_CENTER)
 
 
 if squad1followingyou==1 then
@@ -99,7 +103,7 @@ if squad1followingyou==1 then
 else
 	text = "Not Following you"
 end
-draw.SimpleText( text, "TargetIDSmall", ScrW()/2.2, ScrH()/1.02, Color( 0,255,255 ))
+draw.SimpleText( text, "TargetIDSmall", ScrW()/2.2, ScrH()/1.02, Color( 0,255,255 ), TEXT_ALIGN_CENTER)
 
 
 
@@ -108,8 +112,7 @@ end)
 
 hook.Add("Tick", "KeyDown_Test", function()
 
-
-if input.IsKeyDown( GetConVarNumber("css_orders_key") ) then
+if input.IsKeyDown(KEY_Q ) then
 gui.EnableScreenClicker(true)		
 	if canshow==1 then
 		canshow=0
@@ -648,3 +651,15 @@ timer.Simple(0.3, CombineBootsRun)
 		end
 	end
 end
+
+
+hook.Add( "PostDrawOpaqueRenderables", "random_box_beam", function()
+		for k,v in pairs(ents.GetAll()) do
+			if v:GetNWString("name") == "TheDocument" and ( LocalPlayer():GetPos():Distance( v:GetPos() ) ) > 200 and input.IsKeyDown(KEY_X ) then
+				local Vector1 = v:GetPos()
+				local Vector2 =  LocalPlayer():GetPos()+Vector(0,0,60)
+				render.SetMaterial( Material( "cable/redlaser" ) )
+				render.DrawBeam( Vector1, Vector2, 0.2, 1, 1, Color( 0,255,255 ) ) 
+			end
+		end
+	end )

@@ -35,63 +35,70 @@ util.PrecacheModel("models/zombie/poison.mdl")
 net.Receive( "SpawnRequest", function( length, client )
 local data = net.ReadString()
 PrintMessage(HUD_PRINTTALK, net.ReadString())
-
-if CountPlayerCombine(client:EntIndex()) < GetConVarNumber("css_max_combine_per_player") 
- then
-	if data == "Soldier" then SpawnCombineS(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
-	end
-	if data == "Shotgunner" then SpawnCombineShotgunner(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
-	end
-	if data == "Elite" then SpawnCombineElite(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
-	end
-	if data == "Guard" then SpawnCombinePrisonGuard(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
-	end
-	if data == "Metrocop" then SpawnMetropolice(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
-	end
-	
-	if data == "Sniper" then SpawnSniper(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:GetAngles(),client:EntIndex()) 
-	end
-	
-	
-	
-	if data == "Turret" then SpawnTurret(client:GetEyeTraceNoCursor().HitPos,client:GetAngles(),client:EntIndex()) 
-	end
-	
-	if data == "Hunter" then SpawnHunter(client:GetEyeTraceNoCursor().HitPos,client:EntIndex()) 
-	end
-	
-	if data == "CeilingTurret" then
-		traceRes = util.QuickTrace(client:GetEyeTraceNoCursor().HitPos, Vector(0,0,200), player.GetAll())
-		if traceRes.Hit then
-			SpawnCeilingTurretStrong(client:GetEyeTraceNoCursor().HitPos,client:GetAngles(),client:EntIndex())
-		else 
-			client:PrintMessage(HUD_PRINTTALK, "Combine Cameras can only spawn on a ceiling.") 	
+if CanSpawnCombine==1 then
+	if CountPlayerCombine(client:EntIndex()) < GetConVarNumber("css_max_combine_per_player") 
+	then
+		if data == "Soldier" then SpawnCombineS(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
 		end
+		if data == "Shotgunner" then SpawnCombineShotgunner(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
+		end
+		if data == "Elite" then SpawnCombineElite(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
+		end
+		if data == "Guard" then SpawnCombinePrisonGuard(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
+		end
+		if data == "Metrocop" then SpawnMetropolice(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
+		end
+		
+		if data == "Sniper" then SpawnSniper(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:GetAngles(),client:EntIndex()) 
+		end
+		
+		
+		if data == "Turret" then SpawnTurret(client:GetEyeTraceNoCursor().HitPos,client:GetAngles(),client:EntIndex()) 
+		end
+		
+		if data == "Hunter" then SpawnHunter(client:GetEyeTraceNoCursor().HitPos,client:EntIndex()) 
+		end
+		
+		if data == "CeilingTurret" then
+			traceRes = util.QuickTrace(client:GetEyeTraceNoCursor().HitPos, Vector(0,0,200), player.GetAll())
+			if traceRes.Hit then
+				SpawnCeilingTurretStrong(client:GetEyeTraceNoCursor().HitPos,client:GetAngles(),client:EntIndex())
+			else 
+				client:PrintMessage(HUD_PRINTTALK, "Combine Cameras can only spawn on a ceiling.") 	
+			end
+		end
+	else
+				client:PrintMessage(HUD_PRINTTALK, "You have passed the combine-per-player limit ("..GetConVarNumber("css_max_combine_per_player")..")") 	
 	end
-else
-			client:PrintMessage(HUD_PRINTTALK, "You have passed the combine-per-player limit ("..GetConVarNumber("css_max_combine_per_player")..")") 	
-end
+	
+	if data == "Rollermine" then SpawnRollermine(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,20),client:EntIndex()) 
+	end
+	
+	
+	
+	if data == "Helicopter" and CountAirUnits() < 1 then SpawnHeli(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
+	
+	elseif  data == "Helicopter" and CountAirUnits() > 0 then 
+	client:PrintMessage(HUD_PRINTTALK, "Dismiss the existing air unit before requesting another.") 	
+	end
+	if data == "Gunship" and CountAirUnits() < 1 then SpawnGunship(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
+	elseif data == "Gunship" and CountAirUnits() > 0 then 
+	client:PrintMessage(HUD_PRINTTALK, "Dismiss the existing air unit before requesting another.") 	
+	end
+	if data == "Dropship" and CountAirUnits() < 1 then SpawnDropship(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
+	elseif data == "Dropship" and CountAirUnits() > 0 then 
+	client:PrintMessage(HUD_PRINTTALK, "Dismiss the existing air unit before requesting another.") 	
+	end
+	
+	else 
+	
+		client:PrintMessage(HUD_PRINTTALK, "You cannot request reinforcments right now.") 	
 
-if data == "Rollermine" then SpawnRollermine(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,20),client:EntIndex()) 
-end
-
-
-
-if data == "Helicopter" and CountAirUnits() < 1 then SpawnHeli(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
-
-elseif  data == "Helicopter" and CountAirUnits() > 0 then 
-client:PrintMessage(HUD_PRINTTALK, "Dismiss the existing air unit before requesting another.") 	
-end
-if data == "Gunship" and CountAirUnits() < 1 then SpawnGunship(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
-elseif data == "Gunship" and CountAirUnits() > 0 then 
-client:PrintMessage(HUD_PRINTTALK, "Dismiss the existing air unit before requesting another.") 	
-end
-if data == "Dropship" and CountAirUnits() < 1 then SpawnDropship(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
-elseif data == "Dropship" and CountAirUnits() > 0 then 
-client:PrintMessage(HUD_PRINTTALK, "Dismiss the existing air unit before requesting another.") 	
 end
 
 if data == "Mortar" then
+
+if canistersavailable == 1 then
 	local vector = client:GetEyeTraceNoCursor().HitPos
 
 	timer.Simple(2,function() SpawnCanister(vector) end)
@@ -102,6 +109,11 @@ if data == "Mortar" then
 
 	client:EmitSound("npc/combine_soldier/vo/overwatchrequestskyshield.wav")
 	PrintMessage(HUD_PRINTTALK, "[Overwatch]: Requested mortar round at "..tostring(client:GetEyeTraceNoCursor().HitPos).."") 
+	canistersavailable=0
+	
+	else
+		client:PrintMessage(HUD_PRINTTALK, "[Overwatch]: Mortar rounds unavailable at the moment.") 
+	end
 end
 
 if data == "DismissAirUnits" then 
@@ -131,24 +143,26 @@ end)
 
 function MoreWaves()
 		for k, v in pairs(player.GetAll()) do
-	v:GiveAmmo( 15, "Buckshot", true )
-	v:GiveAmmo( 150, "AR2", true )
-	v:GiveAmmo( 1, "Grenade", true )	
+			v:GiveAmmo( 15, "Buckshot", true )
+			v:GiveAmmo( 150, "AR2", true )
+			v:GiveAmmo( 1, "Grenade", true )	
 		end
+CanSpawnCombine=1
 
-PrintMessage(HUD_PRINTTALK, "MoreWaves")
+PrintMessage(HUD_PRINTTALK, "You have 30 seconds untill the next wave")
 WaveNumber=WaveNumber+1
-local randomnumber = math.random(1,3)
-if randomnumber == 1 then
-timer.Create( "ZombieWave", 2, 20, ZombieWave )
-PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Necrotics are coming.")
-elseif randomnumber == 2 then
-timer.Create( "AntLionWave", 2, 20, AntLionWave )
-PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Antlions are coming.")
-else
-timer.Create( "RebelWave", 2, 20, RebelWave )
-PrintMessage(HUD_PRINTTALK, "[Overwatch]: The Rebels have sent a squad to your position.")
-end
+
+timer.Simple(30, function()
+CanSpawnCombine=0
+		local randomnumber = math.random(1,2)
+		if randomnumber == 1 then
+		timer.Create( "ZombieWave", 2, 20, ZombieWave )
+		PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Necrotics are coming.")
+		elseif randomnumber == 2 then
+		timer.Create( "AntLionWave", 2, 20, AntLionWave )
+		PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Antlions are coming.")
+		end
+end)
 end
 
 
@@ -177,7 +191,7 @@ function CountPlayerCombine(owner)
 local entities=0
 		for k, v in pairs(ents.GetAll()) do
 		if table.HasValue(AllCombineEntities, v:GetClass()) then
-		if v:GetNWString("owner") == ""..owner.."" then
+		if v:Health() > 0 and v:GetNWString("owner") == ""..owner.."" then
 			entities=entities+1
 			print(v:GetClass())
 		end
@@ -185,6 +199,26 @@ local entities=0
 		end
 		return(entities)
 end
+
+function CountPlayerCombineNumber(owner,squad)
+local entities=0
+		for k, v in pairs(ents.GetAll()) do
+			if table.HasValue(AllCombineEntities, v:GetClass()) then
+				if v:Health() > 0 and v:GetNWString("owner") == ""..owner.."" and v:GetNWString("squad") == ""..squad.."" then
+					entities=entities+1
+				end
+			end
+		end
+		if squad == "squad1" then
+		if entities==0 then   player.GetByID(tonumber(owner)):SendLua("squad1=false")  end
+		player.GetByID(tonumber(owner)):SendLua("squad1numbers="..entities.."")
+		else
+		if entities==0 then  player.GetByID(tonumber(owner)):SendLua("squad2=false")  end
+
+		player.GetByID(tonumber(owner)):SendLua("squad2numbers="..entities.."")
+		end
+end
+
 
 function CountAirUnits()
 local entities=0
@@ -290,10 +324,41 @@ end
 
 end
 
+
+
+function ZombieWaveFindTheDocument()
+
+if CountEntity("npc_fastzombie") < 2+WaveNumber then
+SpawnBasicNPC(table.Random(combinespawnzones), "npc_fastzombie")
+end
+
+if CountEntity("npc_zombie") <5+WaveNumber then
+SpawnBasicNPC(table.Random(combinespawnzones), "npc_zombie")
+end
+
+if CountEntity("npc_poisonzombie") < 1+WaveNumber then
+SpawnBasicNPC(table.Random(combinespawnzones), "npc_poisonzombie")
+end
+
+
+if IsMounted("ep1") or IsMounted("ep2") then
+
+if CountEntity("npc_zombine") < 1+WaveNumber then
+SpawnBasicNPC(table.Random(combinespawnzones), "npc_zombine")
+end
+
+
+end
+
+
+end
+
+
+
 function AddonCycleLong()
 local randompl = d
 --PrintMessage(HUD_PRINTTALK, "AddonCycleLong")
-timer.Create( "AddonCycleLong", 20, 1, AddonCycleLong)
+timer.Create( "AddonCycleLong", 40, 1, AddonCycleLong)
 --timer.Simple(20, AddonCycleLong )
 if CountEntity("npc_combine_s") > 1 then
 randompl = table.Random(ents.FindByClass("npc_combine_s")) table.Random(ents.FindByClass("npc_metropolice")) table.Random(ents.FindByClass("npc_hunter")) table.Random(ents.FindByClass("npc_turret_floor"))
@@ -460,6 +525,9 @@ CanTalk=1
 			end
 		end	
 		end
+	CountPlayerCombineNumber(client:EntIndex(),"squad1")
+	CountPlayerCombineNumber(client:EntIndex(),"squad2")
+
 end)
 
 net.Receive( "disbandsquad2", function( length, client )
@@ -476,6 +544,9 @@ net.Receive( "disbandsquad2", function( length, client )
 
 		end	
 		end
+	CountPlayerCombineNumber(client:EntIndex(),"squad1")
+	CountPlayerCombineNumber(client:EntIndex(),"squad2")
+
 end)
 
 
@@ -595,6 +666,9 @@ CanTalk=1
 		end
 		end	
 		end
+	CountPlayerCombineNumber(client:EntIndex(),"squad1")
+	CountPlayerCombineNumber(client:EntIndex(),"squad2")
+
 end)
 
 
@@ -612,7 +686,11 @@ net.Receive( "disbandsquad", function( length, client )
 
 		end	
 		end
-end)
+
+	CountPlayerCombineNumber(client:EntIndex(),"squad1")
+	CountPlayerCombineNumber(client:EntIndex(),"squad2")
+
+		end)
 
 
 net.Receive( "squadgohere", function( length, client )
@@ -840,7 +918,6 @@ local info=ply:GetEyeTraceNoCursor()
 	end
 
 	if ply:KeyPressed(IN_ATTACK2) then
-
 			ply:UnSpectate()
 			ply:Spawn()
 	end
@@ -850,9 +927,12 @@ end
 function GM:KeyPress(ply,key)
 local info=ply:GetEyeTraceNoCursor()
 	if key == IN_USE then
+
 		if table.HasValue(AllCombineEntities, info.Entity:GetClass()) and info.Entity:GetNWString("owner") == "none" or info.Entity:GetNWString("owner") == ""..ply:EntIndex()..""
 			then
-			print(info.Entity:GetClass())
+			ply:SendLua("totalcombinenumber="..CountPlayerCombine(ply:EntIndex()).."")
+
+			--print(info.Entity:GetClass())
 			--print(GetNWString("selected"))
 			if info.Entity:GetNWString("selected") == "0" then	
 			--ply:EmitSound(table.Random(CombineChat_Select), 75, 100)
@@ -873,11 +953,11 @@ end
 
 
 function GM:PlayerSpawn(ply)
-	ply:SetTeam(1)
-    ply:SetCustomCollisionCheck(true)
+	--ply:SetTeam(1)
+	ply:SetCustomCollisionCheck(true)
 	ply:StripAmmo()
 	ply:StripWeapons()
-	ply:SetCollisionGroup(11)
+	ply:SetCollisionGroup(0)
 
 	if GetConVarString("css_player_loadout") == "" then else
 			print("[Combine Squad Survival]: Loaded "..GetConVarString("css_player_loadout").." for the players at start.")
@@ -916,12 +996,21 @@ if entity:GetModel("models/combine_dropship_container.mdl")  then
 end
 
  if table.HasValue(AllCombineEntities, entity:GetClass()) then
+
+ /*
+if table.Count(ents.GetByIndex(tonumber(entity:GetNWString("owner")))) > 0 
+ then
+ timer.Simple(1, function()  
+ 	local owner = ents.GetByIndex(tonumber(entity:GetNWString("owner")))
+ 	owner:SendLua("totalcombinenumber="..CountPlayerCombine(owner:EntIndex()).."")
+ end)
+end
+*/
 	entity:AddRelationship(  "player D_LI 99")
 	entity:SetNWString("selected","0")
 	entity:SetNWVector("HoldPosition","NO_VECTOR")
 	entity:SetNWString("FollowMe", "no")
 	entity:SetNWString("Squad", "")
-	--entity:SetKeyValue("squadname", "")
 	if GetConVarNumber("css_combine_nocollide") == 1 then
 	entity:SetCollisionGroup(11)
 	end
@@ -944,6 +1033,13 @@ elseif entity:IsNPC() then
 		entity:AddRelationship( ""..value.." D_HT 20" )
 	end)
 	end
+	
+	
+if entity:GetNWString("owner") then
+
+end
+print("Entity created: "..entity:GetClass().."")
+
 end
 function SpawnRollermine( pos,owner )
 	NPC = ents.Create( "npc_rollermine" )
@@ -1084,7 +1180,6 @@ function SpawnCombineS( pos,owner )
 	NPC:SetHealth("100")
 	NPC:EmitSound("items/ammo_pickup.wav",75,100)
 
-
 	--NPC:Fire("StartPatrolling","",0)
 end
 
@@ -1183,6 +1278,7 @@ function SpawnHunter( pos,owner )
 	NPC:SetName("Hunter")
 	NPC:SetHealth("300")
 	NPC:AddRelationship( "npc_antlion D_HT 20" )
+
 end
 
 function SpawnCombinePrisonGuard( pos,owner )
@@ -1258,6 +1354,7 @@ function SpawnCombineAssasin( pos,owner )
 	NPC:AddEntityRelationship( value, D_LI, 99 )
 	end
 	end)
+
 end
 
 function SpawnCombineCremator( pos,owner )
@@ -1286,6 +1383,7 @@ function SpawnCombineCremator( pos,owner )
 	NPC:AddEntityRelationship( value, D_LI, 99 )
 	end
 	end)
+
 end
 
 -- BETA NPCs
@@ -1300,11 +1398,9 @@ configfound=0
 --include("/maps/nomap.lua")
 end
 
-
 function GM:EntityTakeDamage(damaged,damage)
 --if damaged:Health() < 1 and damaged:IsNPC() then damaged:Remove() end
 damage:ScaleDamage(GetConVarNumber("css_damage_multiplier"))
-
 
 
 if table.HasValue(AllCombineEntities, damaged:GetClass()) then 
@@ -1334,7 +1430,30 @@ function GM:Initialize()
 	RunConsoleCommand( "ai_norebuildgraph", "1")   
 end
 
+function MapSetup()
 
+print("Map Setup loaded.")
+end
+
+function GM:ShouldCollide(ent1,ent2)
+local owner
+if ent1:GetClass() == "npc_combine_s" or ent1:GetNWString("name") == "TheDocument" then 	
+		if ent2:GetClass() == "npc_combine_s" or ent2:GetNWString("name") == "TheDocument" then
+			if ent1:Distance(ent2) < 100 then
+			if ent1:GetClass() == "npc_combine_s" then
+			 owner = ents.GetByIndex(tonumber(ent1:GetNWString("owner")))
+			 ent2:Remove()
+			else
+			 owner = ents.GetByIndex(tonumber(ent2:GetNWString("owner")))
+			 ent1:Remove()
+			end
+			print(owner:GetName())
+			FindTheDocumentsWin(owner)
+		end
+	end
+end
+	return true
+end
 	
 function GM:InitPostEntity()
 if !combinespawnzones then
@@ -1347,6 +1466,7 @@ combinespawnzones = {}
 				end
 			end)
 end
+CanSpawnCombine=1
 canplay=1
 NPCstospawn=0
 WaveNumber=0
@@ -1354,6 +1474,8 @@ WaveSpawnReference=0
 started=0
 gamemodetime = CurTime()+10
 CanTalk=1
+canistersavailable=1
+if MapSetup() then MapSetup() end
 end
 
 function GM:OnNPCKilled(victim, killer, weapon)
@@ -1370,28 +1492,18 @@ if victim:GetClass() == "npc_turret_floor" then return true end
 			net.WriteString( ""..victim:GetName().."" )
 			net.Broadcast()
 		end
- if table.HasValue(AllCombineEntities, killer:GetClass())
- then
  
- if canplay==1 then
-	killer:EmitSound(table.Random(CombineChat_Kill), 75, 100)
-	canplay=0
-	timer.Simple(4, function()  canplay=1 end)
-	end
- 
- if killer:GetNWString("owner") != "none" then
-	local owner = ents.GetByIndex(tonumber(killer:GetNWString("owner")))
-	owner:AddFrags(1) 
- end
- end
 
   if table.HasValue(AllCombineEntities, victim:GetClass())
  then 
   if victim:GetNWString("owner") != "none" then
 	local owner = ents.GetByIndex(tonumber(victim:GetNWString("owner")))
   owner:PrintMessage(HUD_PRINTTALK, ""..victim:GetNWString("name").." has died!")
-  owner:SetFrags(math.Round(owner:Frags()/2,0))
+  owner:SetFrags(owner:Frags()-10)
 	owner:EmitSound(table.Random(CombineChat_Dead), 75, 100)
+	CountPlayerCombineNumber(owner:EntIndex(),"squad1")
+	CountPlayerCombineNumber(owner:EntIndex(),"squad2")
+	owner:SendLua("totalcombinenumber="..CountPlayerCombine(owner:EntIndex()).."")
  end
 
  end
@@ -1406,41 +1518,68 @@ if !victim:OnGround() then
 		end
 	end
 end
+
+if table.HasValue(AllCombineEntities, killer:GetClass())
+ then
+ 
+ if canplay==1 then
+	killer:EmitSound(table.Random(CombineChat_Kill), 75, 100)
+	canplay=0
+	timer.Simple(4, function()  canplay=1 end)
+	end
+ 
+ if killer:GetNWString("owner") != "none" 
+ then
+	local owner = ents.GetByIndex(tonumber(killer:GetNWString("owner")))
+	owner:AddFrags(1) 
+
+ end
+ end
+ 
+ 
+ if table.HasValue(Zombies, victim:GetClass()) and math.random(1,4) == 1 then
+ 
+ 	SpawnItem(table.Random(ZombiesDrop), victim:GetPos(), Angle(0,0,0))
+
+ 
+ end
 end
 
-
+function SpawnItem (weapon, pos, ang)
+	ITEM = ents.Create(weapon)
+	ITEM:SetPos( pos )
+	ITEM:SetAngles( ang )
+	ITEM:Spawn()
+end
 function FirstSpawn(ply)
-if configfound==1 then
-ply:PrintMessage(HUD_PRINTTALK, "Prepare yourself and say !start when you are ready.")
-ply:PrintMessage(HUD_PRINTTALK, "Say !stop if you want a break.")
-end
-timer.Simple(3, function() ply:SendLua("CombineBootsRun()")  end)
+ply:PrintMessage(HUD_PRINTTALK, "Welcome.")
+ply:PrintMessage(HUD_PRINTTALK, "There are three minimodes to play for now.")
 
+timer.Simple(15, function() 
+ply:PrintMessage(HUD_PRINTTALK, "Say !zombies or !antlions to spawn the respective wave.")
+ply:PrintMessage(HUD_PRINTTALK, "Each wave will have more monsters.")
+ end)
+
+ timer.Simple(30, function()
+ply:PrintMessage(HUD_PRINTTALK, "Say !document to play Find The Document minimode.")
+ply:PrintMessage(HUD_PRINTTALK, "A paperclip will appear somewhere in the map. You have to find it.")
+ply:PrintMessage(HUD_PRINTTALK, "Zombies will spawn untill you find the document.")
+end)
+
+ timer.Simple(45, function()
+ply:PrintMessage(HUD_PRINTTALK, "Say !hordes and the gamemode will spawn different waves of enemies,")
+ply:PrintMessage(HUD_PRINTTALK, "with a small pause between them.")
+ply:PrintMessage(HUD_PRINTTALK, "Each wave will have more monsters. Say !stop to stop it.")
+end)
+timer.Simple(60, function()
+ply:PrintMessage(HUD_PRINTTALK, "You cannot spawn combine while inside the Find The Document or Hordes minimodes.")
+end)
+
+timer.Simple(3, function() ply:SendLua("CombineBootsRun()")  end)
 ply:SendLua("localownerid="..ply:EntIndex().."")
 end
 hook.Add( "PlayerInitialSpawn", "playerInitialSpawn", FirstSpawn )
 
-/*
-function GM:ShouldCollide(ent1,ent2)
-	if ent1:GetClass() == "npc_combinedropship" then 	
-
-		if ent2:GetClass() == "npc_combine_s" then
-		print("lelele")
-			return false
-		end
-	end
-	if ent2:GetClass() == "npc_combinedropship" then
-		if ent1:GetClass() == "npc_combine_s"  then
-			print("lelele")
-
-			return false
-		end
-	end
-	
-	
-	return true
-end
-*/
 function SpawnHeli( pos,owner)
 
 	NPC = ents.Create( "npc_helicopter" )
@@ -1532,7 +1671,7 @@ function SpawnCanister( pos )
 			canister:SetAngles(Angle(-70,0,0))
 			canister:SetPos(pos)
 			canister:SetKeyValue( "HeadcrabType", math.random(0,2) )
-			canister:SetKeyValue( "HeadcrabCount", /*math.random(3,6)*/ 0 )
+			canister:SetKeyValue( "HeadcrabCount",0 )
 			canister:SetKeyValue( "FlightSpeed", "8000" )
 			canister:SetKeyValue( "FlightTime", "3" )
 			canister:SetKeyValue( "StartingHeight", "0" )
@@ -1544,9 +1683,84 @@ function SpawnCanister( pos )
 			canister:SetKeyValue( "SkyboxCannisterCount", "30" )
 			canister:Fire("FireCanister","",0.7)
 		canister:Spawn()	
-		timer.Simple(100, function() canister:Remove() end)
+		timer.Simple(100, function() canistersavailable=1 canister:Remove() end)
 	else
 	PrintMessage(HUD_PRINTTALK, "[Overwatch]: Denied. Place is not reachable.") 
 
+	end
+end
+
+function SpawnProp( pos, ang, model )
+	ITEM = ents.Create("prop_physics" )
+	ITEM:SetPos( pos )
+	ITEM:SetAngles(ang)
+	ITEM:SetModel(model)
+	ITEM:Spawn()
+end
+function SpawnDocument( pos, ang, model )
+	ITEM = ents.Create("prop_physics" )
+	ITEM:SetPos( pos )
+	ITEM:SetAngles(ang)
+	ITEM:SetModel(model)
+	ITEM:SetNWString("name","TheDocument")
+    ITEM:SetCustomCollisionCheck(true)
+
+	ITEM:Spawn()
+end
+function SpawnStaticProp( pos, ang, model )
+	ITEM = ents.Create("prop_physics" )
+	ITEM:SetPos( pos )
+	ITEM:SetAngles(ang)
+	ITEM:SetModel(model)
+	ITEM:Spawn()
+	ITEM:Fire("DisableMotion","",0)
+end
+
+
+function GM:AllowPlayerPickup(ply,ent) 
+
+if ent:GetNWString("name") == "TheDocument" then
+ent:Remove()
+local player = ply
+FindTheDocumentsWin(player)
+end
+return true
+end
+function FindTheDocumentsWin(ply)
+
+
+PrintMessage(HUD_PRINTTALK, "[Overwatch]: "..ply:GetName().." has found the document.") 
+ply:AddFrags(50)
+if timer.Exists("ZombieWaveFindTheDocument") then timer.Destroy("ZombieWaveFindTheDocument")  end
+CanSpawnCombine=1
+end
+function Minimode_FindTheDocuments()
+
+
+
+CanSpawnCombine=0
+print("executed")
+FindTheDocuments_Table = {}
+if ITEMPLACES then 
+for k, v in pairs(ITEMPLACES) do
+	table.insert(FindTheDocuments_Table, v)
+end
+end
+
+	for k, v in pairs(ents.GetAll()) do
+		if table.HasValue(FindTheDocuments_Models, v:GetModel()) then
+			table.insert(FindTheDocuments_Table, v:GetPos()+Vector(0,0,50))
+			print(v:GetModel())
+		end
+	end
+	if table.Count(FindTheDocuments_Table) > 0 then
+	SpawnDocument(table.Random(FindTheDocuments_Table),Angle(0,0,0),"models/props_lab/clipboard.mdl")
+	PrintMessage(HUD_PRINTTALK, "[Overwatch]: A Document has been placed.") 
+	PrintMessage(HUD_PRINTTALK, "[Overwatch]: Find it and get it. Your soldiers can get it too.") 
+
+	timer.Create( "ZombieWaveFindTheDocument", 5, 0, ZombieWaveFindTheDocument )
+
+	else
+	PrintMessage(HUD_PRINTTALK, "No suitable places found. Looks like you cannot play FindTheDocuments in this map.") 
 	end
 end

@@ -10,7 +10,7 @@ HLRenaissance3 = {"monster_bullchicken","npc_devilsquid","npc_frostsquid","monst
 --,"monster_snark","monster_shocktrooper"
 HLRenaissanceBosses={"monster_gargantua","monster_bigmomma","monster_babygarg"}
 
-
+ZombiesDrop = {"weapon_shotgun","weapon_smg1","weapon_frag","weapon_ar2","item_box_buckshot","weapon_crowbar","weapon_357","weapon_crossbow","item_healthkit"}
 
 RelationshipIssuesSet={"npc_sniper"}
 RelationshipIssuesAddEntity={"npc_fassassin","npc_cremator"}
@@ -21,7 +21,7 @@ CombineHelicopters = {"npc_helicopter","npc_combinegunship","npc_combinedropship
 AllCombineEntities = {"npc_combine_s", "npc_metropolice","npc_hunter","npc_fassassin","npc_cremator","npc_rollermine","npc_helicopter","npc_combinegunship","npc_manhack","npc_turret_floor","npc_turret_ceiling","npc_combinedropship","npc_sniper"}
 REBEL_WEAPONS = { "ai_weapon_crossbow","ai_weapon_smg1","ai_weapon_shotgun","ai_weapon_ar2"}
 
-Zombies = {"npc_headcrab_fast","npc_zombie","npc_fastzombie","npc_headcrab_black","npc_poisonzombie"}
+Zombies = {"npc_zombie","npc_fastzombie","npc_poisonzombie","npc_zombine"}
 Monsters = {"npc_antlion","npc_antlionguard"}
 
 KillsWithWeapon={"npc_combine_s", "npc_metropolice","npc_citizen","player"}
@@ -64,16 +64,19 @@ if GetConVarNumber("css_extra_beta_npcs") == 1 then
 	end
 end
 
-	    if text == "!start" and started != 1 then
+	    if text == "!hordes" and started != 1 then
 		started=1
+		CanSpawnCombine=0
 		AddonCycleLong()
 		return false
 	end
-	    if text == "!stop" and started == 1 then
+	    if text == "!stop" then
+		CanSpawnCombine=1
 		started=0
 		timer.Remove( "AddonCycleLong")
 		return false
 		end
+	    if text == "!document" then Minimode_FindTheDocuments() return false end
 		
 	    if text == "!zombies" and started != 1 then
 		ZombieWave()
@@ -211,6 +214,7 @@ CombineChat_Select = {"npc/combine_soldier/vo/readyweapons.wav"}
 
 CombineChat_Go={"npc/metropolice/vo/keepmoving.wav","npc/combine_soldier/vo/gosharpgosharp.wav","npc/combine_soldier/vo/movein.wav","npc/combine_soldier/vo/unitisinbound.wav","npc/combine_soldier/vo/gosharp.wav"}
 
+FindTheDocuments_Models = {"models/props_c17/furniturefrawer001a.mdl","models/props_c17/furnituredrawer001a_chunk03.mdl","models/props_c17/furnituremattress001a.mdl","models/props_c17/furnituremattress001a.mdl","models/props_c17/furnituredrawer002a.mdl","models/props_c17/furnituretable001a.mdl","models/props_c17/furnituretable002a.mdl","models/props_c17/furnituretable003a.mdl","models/props_combine/breendesk.mdl","models/props_interiors/furniture_desk01a.mdl","models/props_wasteland/controlroom_desk001b.mdl","models/props_wasteland/kitchen_counter001b.mdl","models/props_wasteland/kitchen_counter001d.mdl","models/props_wasteland/kitchen_shelf002a.mdl","models/props_wasteland/kitchen_shelf001a.mdl","models/props_wasteland/kitchen_counter001c.mdl","models/props_wasteland/kitchen_counter001a.mdl","models/props_wasteland/prison_bedframe001b.mdl","models/props_combine/breendesk.mdl","models/props/cs_militia/shelves.mdl","models/props/cs_militia/shelves_wood.mdl","models/props/cs_militia/table_kitchen.mdl","models/props/cs_militia/table_shed.mdl","models/props/cs_office/shelves_metal.mdl","models/props/cs_office/table_coffee.mdl","models/props/cs_office/table_meeting.mdl","models/props_junk/trashdumpster01a.mdl"}
 
 
 if IsMounted("ep1") or IsMounted("ep2") then
