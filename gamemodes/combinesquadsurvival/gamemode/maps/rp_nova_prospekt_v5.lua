@@ -7,20 +7,11 @@ zonescovered = {Vector(-1313.679077, 2659.703857, 384.401550), Vector(-1938.3846
 
 function MapSetup()
 for k, v in pairs(ents.FindByClass('func_door_rotating')) do print(v:GetClass()) v:SetKeyValue( 'spawnflags', '32' ) v:Fire('Open','',0) end
-
-
 print("Removing troubling entities")
 for k, v in pairs(ents.GetAll()) do
---if tostring(v:EntIndex()) == "459" then  print(v:EntIndex()) v:Remove() end
-if tostring(v:EntIndex()) == "444" then  print(v:EntIndex()) v:Remove() end
+--if v:EntIndex()) == 459 then  print(v:EntIndex()) v:Remove() end
+if v:GetClass() == "func_door"  then print(v:EntIndex()) v:Remove() end
 
-if tostring(v:EntIndex()) == "306" then  print(v:EntIndex()) v:Remove() end
-if tostring(v:EntIndex()) == "443" then  print(v:EntIndex()) v:Remove() end
-if tostring(v:EntIndex()) == "290" then  print(v:EntIndex()) v:Remove() end
-if tostring(v:EntIndex()) == "291" then  print(v:EntIndex()) v:Remove() end
-if tostring(v:EntIndex()) == "483" then  print(v:EntIndex()) v:Remove() end
-if tostring(v:EntIndex()) == "475" then  print(v:EntIndex()) v:Remove() end
-if tostring(v:EntIndex()) == "476" then  print(v:EntIndex()) v:Remove() end
 end
 print("Done")
 end

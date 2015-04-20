@@ -1,6 +1,35 @@
 AddCSLuaFile( "shared.lua" )
 include( "shared.lua" )
 
+darkencolor = Color(255,0,0)
+HUDTEXT = "Hidden"
+HUDCOLOR = Color(0,255,0)
+light_above_limit = 3
+LIGHTEXT = 'Visible'
+LIGHTCOLOR = Color(255,0,0)
+lightcol = 0
+playerfrags=0
+net.Receive( "Spotted", function( length, client )
+	HUDTEXT = 'Spotted'
+	HUDCOLOR=Color(255,8,8)
+end )
+
+net.Receive( "Hidden", function( length, client )
+	HUDTEXT = 'Safe'
+	HUDCOLOR=Color(0,255,0)
+end )
+
+net.Receive( "NotVisible", function( length, client )
+	LIGHTEXT = 'Not Visible'
+	LIGHTCOLOR = Color(0,255,0) 
+end )
+
+net.Receive( "Visible", function( length, client )
+	LIGHTEXT = 'Visible'
+	LIGHTCOLOR = Color(255,255,0)
+end )
+
+
 
 highlightkey = 2
 orderskey= 2
@@ -42,9 +71,13 @@ net.Receive( "PlayerKillNotice", function( len, ply )
 end)
 
 hook.Add( "PreDrawHalos", "AddHalos", function()
+if LocalPlayer():GetNWString("side") == "combine" then
+
 	if LocalPlayer() and LocalPlayer():GetPos()  then
 		for k, v in pairs(ents.GetAll()) do
+			if v:GetNWString("name") == "TheDocument" and ( LocalPlayer():GetPos():Distance( v:GetPos() ) ) < 300  then halo.Add( {v}, Color( 255,255,255 ), 1, 1, 1, true, true ) end
 			if table.HasValue(AllCombineEntities, v:GetClass())  then
+
 				if v:GetNWString("selected") == "1" and v:GetNWString("owner") == tostring(localownerid) then
 						halo.Add( {v}, Color( 255,255,255 ), 1, 1, 1, true, true )
 				elseif v:GetNWString("Squad") == "squad1" and v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown(KEY_X) then
@@ -60,42 +93,60 @@ hook.Add( "PreDrawHalos", "AddHalos", function()
 		end
 	end
 
+else		
+		for k, v in pairs(ents.FindInSphere(LocalPlayer():GetEyeTraceNoCursor().HitPos, 500)) do
+			if table.HasValue(AllCombineEntities, v:GetClass()) then
+				if v:IsValid() then
+						halo.Add( {v}, Color( 84,2,2 ), 1, 1, 1, true, true )
+				end
+			end
+			if v:GetClass() == "item_healthcharger" and LocalPlayer():Health() < 40 and LocalPlayer():Health() > 0 then
+				halo.Add( {v}, Color( 0,204,255 ), 1, 1, 1, true, true )
+			end
+
+		end	
+end
+	
 end)
 
 hook.Add( "HUDPaint", "HuntHud", function()
+if LocalPlayer():GetNWString("side") == "combine" then
+
 if !LocalPlayer():Alive() then
 draw.DrawText( "·", "TargetIDsmall", ScrW() * 0.5, ScrH() * 0.49, Color(255,255,255), TEXT_ALIGN_CENTER )
-
 end
+
+draw.DrawText( "Points: "..playerfrags.."", "TargetIDsmall", ScrW()/2, ScrH()/1.02, Color(255,255,255), TEXT_ALIGN_CENTER )
+
 local color = Color( 0,255,0 )
 if squad1==false then color = Color( 255,0,0 ) else color = Color( 0,255,0 ) end
-draw.SimpleText( "Alpha ("..squad1numbers..")", "TargetID", ScrW()/2.2, ScrH()/1.06,color, TEXT_ALIGN_CENTER)
+draw.SimpleText( "Alpha ("..squad1numbers..")", "TargetID", ScrW()/2.4, ScrH()/1.06,color, TEXT_ALIGN_CENTER)
 if squad2==false then color = Color( 255,0,0 ) else color = Color( 0,255,0 ) end
-draw.SimpleText( "Bravo ("..squad2numbers..")", "TargetID", ScrW()/1.8, ScrH()/1.06, color, TEXT_ALIGN_CENTER)
+draw.SimpleText( "Bravo ("..squad2numbers..")", "TargetID", ScrW()/1.7, ScrH()/1.06, color, TEXT_ALIGN_CENTER)
 
 
-draw.DrawText( "Total: "..totalcombinenumber.."", "TargetIDsmall", ScrW()/2, ScrH()/1.06, Color(255,255,255), TEXT_ALIGN_CENTER )
+draw.DrawText( "Total units: "..totalcombinenumber.."", "TargetIDsmall", ScrW()/2, ScrH()/1.04, Color(255,255,255), TEXT_ALIGN_CENTER )
 
 if squad2holdingposition==1 then
 	text = "Holding Position"
 else
 	text = "Not Holding Position"
 end
-draw.SimpleText( text, "TargetIDSmall", ScrW()/1.8, ScrH()/1.04, Color( 0,255,255 ), TEXT_ALIGN_CENTER)
+draw.SimpleText( text, "TargetIDSmall", ScrW()/1.7, ScrH()/1.04, Color( 0,255,255 ), TEXT_ALIGN_CENTER)
 
 if squad1holdingposition==1 then
 	text = "Holding Position"
 else
 	text = "Not Holding Position"
 end
-draw.SimpleText( text, "TargetIDSmall", ScrW()/2.2, ScrH()/1.04, Color( 0,255,255 ), TEXT_ALIGN_CENTER)
+draw.SimpleText( text, "TargetIDSmall", ScrW()/2.4, ScrH()/1.04, Color( 0,255,255 ), TEXT_ALIGN_CENTER)
 
 if squad2followingyou==1 then
 	text = "Following you"
 else
 	text = "Not Following you"
 end
-draw.SimpleText( text, "TargetIDSmall", ScrW()/1.8, ScrH()/1.02, Color( 0,255,255 ), TEXT_ALIGN_CENTER)
+draw.SimpleText( text, "TargetIDSmall", ScrW()/1.7, ScrH()/1.02, Color( 0,255,255 ), TEXT_ALIGN_CENTER)
 
 
 if squad1followingyou==1 then
@@ -103,16 +154,24 @@ if squad1followingyou==1 then
 else
 	text = "Not Following you"
 end
-draw.SimpleText( text, "TargetIDSmall", ScrW()/2.2, ScrH()/1.02, Color( 0,255,255 ), TEXT_ALIGN_CENTER)
+draw.SimpleText( text, "TargetIDSmall", ScrW()/2.4, ScrH()/1.02, Color( 0,255,255 ), TEXT_ALIGN_CENTER)
+
+else
+		draw.RoundedBox(6 , ScrW()*0.027, ScrH() * 0.84, 140, 44, Color(255,255,255,20))
+
+		draw.DrawText( LIGHTEXT, "TargetID", ScrW() * 0.03, ScrH() * 0.84, LIGHTCOLOR, TEXT_ALIGN_LEFT )
+		draw.DrawText( "Illumination: "..math.Round(lightcol,1).."", "TargetID", ScrW() * 0.03, ScrH() * 0.86, darkencolor, TEXT_ALIGN_LEFT )
+end
+
 
 
 
 end)
 
-
 hook.Add("Tick", "KeyDown_Test", function()
+if LocalPlayer():GetNWString("side") == "combine" then
 
-if input.IsKeyDown(KEY_Q ) then
+if input.IsKeyDown(KEY_Q) then
 gui.EnableScreenClicker(true)		
 	if canshow==1 then
 		canshow=0
@@ -140,7 +199,9 @@ gui.EnableScreenClicker(true)
 			MenuButtonMachines:SetVisible(true)
 			LaunMortar:SetVisible(true)
 			DismissAirUnits:SetVisible(true)
-
+			AddZoneSelected:SetVisible(true)
+			ClearZoneSelected:SetVisible(true)
+			RequestAmmo:SetVisible(true)
 	end
 
 elseif canshow==0 then 
@@ -169,8 +230,11 @@ canshow=1
 			MenuButtonMachines:SetVisible(false)
 			LaunMortar:SetVisible(false)
 			DismissAirUnits:SetVisible(false)
-
+			AddZoneSelected:SetVisible(false)
+			ClearZoneSelected:SetVisible(false)
+			RequestAmmo:SetVisible(false)
 	end
+end
 end)
 
 
@@ -200,8 +264,21 @@ if MenuButtonAir then MenuButtonAir:Remove() end
 if MenuButtonMachines then MenuButtonMachines:Remove() end
 if LaunMortar then LaunMortar:Remove() end
 if DismissAirUnits then DismissAirUnits:Remove() end
+if AddZoneSelected then AddZoneSelected:Remove() end
+if ClearZoneSelected then ClearZoneSelected:Remove() end
+if RequestAmmo then RequestAmmo:Remove() end
 
-
+		RequestAmmo = vgui.Create( "DButton" )
+		RequestAmmo:SetPos( ScrW() * 0.48, ScrH() * 0.20 )
+		RequestAmmo:SetText( "RequestAmmo" )
+		RequestAmmo:SetSize( 90, 30 )
+		RequestAmmo.DoClick = function()
+			--print( "Button was clicked!" )
+			canshow=1
+			net.Start("RequestAmmo")
+			--net.WriteEntity( LocalPlayer())
+			net.SendToServer()
+		end
 
 		Regroup = vgui.Create( "DButton" )
 		Regroup:SetPos( ScrW() * 0.48, ScrH() * 0.52 )
@@ -214,6 +291,7 @@ if DismissAirUnits then DismissAirUnits:Remove() end
 			--net.WriteEntity( LocalPlayer())
 			net.SendToServer()
 		end
+		
 		SquadGoHere = vgui.Create( "DButton" )
 		SquadGoHere:SetPos( ScrW() * 0.42, ScrH() * 0.48 )
 		SquadGoHere:SetText( "Alpha Here" )
@@ -445,14 +523,14 @@ MenuButton:SetPos(ScrW() * 0.48, ScrH() * 0.24)
 MenuButton:SetSize( 90, 30 )
 MenuButton.DoClick = function ( btn )
     local MenuButtonOptions = DermaMenu() -- Creates the menu
-    MenuButtonOptions:AddOption("Soldier",function() SpawnOrder("Soldier") end ) -- Add options to the menu
-    MenuButtonOptions:AddOption("Shotgunner",function() SpawnOrder("Shotgunner") end )
-    MenuButtonOptions:AddOption("Elite",function() SpawnOrder("Elite") end)
-    MenuButtonOptions:AddOption("Guard", function() SpawnOrder("Guard") end)
-    MenuButtonOptions:AddOption("Metrocop",function() SpawnOrder("Metrocop") end )
-    MenuButtonOptions:AddOption("Sniper",function() SpawnOrder("Sniper") end )
+    MenuButtonOptions:AddOption("Soldier (10)",function() SpawnOrder("Soldier") end ) -- Add options to the menu
+    MenuButtonOptions:AddOption("Shotgunner (10)",function() SpawnOrder("Shotgunner") end )
+    MenuButtonOptions:AddOption("Elite (20)",function() SpawnOrder("Elite") end)
+    MenuButtonOptions:AddOption("Guard (15)", function() SpawnOrder("Guard") end)
+    MenuButtonOptions:AddOption("Metrocop (10)",function() SpawnOrder("Metrocop") end )
+    MenuButtonOptions:AddOption("Sniper (30)",function() SpawnOrder("Sniper") end )
 if IsMounted('ep2') then
-    MenuButtonOptions:AddOption("Hunter",function() SpawnOrder("Hunter") end )
+    MenuButtonOptions:AddOption("Hunter (50)",function() SpawnOrder("Hunter") end )
 
 end
     MenuButtonOptions:Open() -- Open the menu AFTER adding your options
@@ -466,12 +544,11 @@ MenuButtonAir:SetPos(ScrW() * 0.54, ScrH() * 0.24)
 MenuButtonAir:SetSize( 90, 30 )
 MenuButtonAir.DoClick = function ( btn )
     local MenuButtonAirOptions = DermaMenu() -- Creates the menu
-    MenuButtonAirOptions:AddOption("Helicopter",function() SpawnOrder("Helicopter") end ) -- Add options to the menu
-    MenuButtonAirOptions:AddOption("Gunship",function() SpawnOrder("Gunship") end )
-    MenuButtonAirOptions:AddOption("Dropship",function() SpawnOrder("Dropship") end )
+    MenuButtonAirOptions:AddOption("Helicopter (200)",function() SpawnOrder("Helicopter") end ) -- Add options to the menu
+    MenuButtonAirOptions:AddOption("Gunship (250)",function() SpawnOrder("Gunship") end )
+    MenuButtonAirOptions:AddOption("Dropship (100)",function() SpawnOrder("Dropship") end )
     MenuButtonAirOptions:Open() -- Open the menu AFTER adding your options
 	MenuButtonAirOptions:SetPos(MenuButtonAir:GetPos())
-
 end
 
 MenuButtonMachines = vgui.Create("DButton")
@@ -480,15 +557,42 @@ MenuButtonMachines:SetPos(ScrW() * 0.42, ScrH() * 0.24)
 MenuButtonMachines:SetSize( 90, 30 )
 MenuButtonMachines.DoClick = function ( btn )
     local MenuButtonMachinesOptions = DermaMenu() -- Creates the menu
-    MenuButtonMachinesOptions:AddOption("Turret",function() SpawnOrder("Turret") end ) -- Add options to the menu
-    MenuButtonMachinesOptions:AddOption("Ceiling Turret",function() SpawnOrder("CeilingTurret") end )
-    MenuButtonMachinesOptions:AddOption("Rollermine",function() SpawnOrder("Rollermine") end )
-	
+    MenuButtonMachinesOptions:AddOption("Turret (10)",function() SpawnOrder("Turret") end ) -- Add options to the menu
+    MenuButtonMachinesOptions:AddOption("Ceiling Turret (30)",function() SpawnOrder("CeilingTurret") end )
+    MenuButtonMachinesOptions:AddOption("Rollermine (10)",function() SpawnOrder("Rollermine") end )
+    MenuButtonMachinesOptions:AddOption("Mine (5)",function() SpawnOrder("Mine") end )
     MenuButtonMachinesOptions:Open() -- Open the menu AFTER adding your options
 	MenuButtonMachinesOptions:SetPos(MenuButtonMachines:GetPos())
-
 end
 
+
+		AddZoneSelected = vgui.Create( "DButton" )
+		AddZoneSelected:SetPos( ScrW() * 0.48, ScrH() * 0.64 )
+		AddZoneSelected:SetText( "Add Patrolzone" )
+		AddZoneSelected:SetSize( 90, 30 )
+		AddZoneSelected.DoClick = function()
+			--print( "Button was clicked!" )
+			canshow=1
+			net.Start("addzoneselected")
+			net.SendToServer()
+		end
+
+
+		ClearZoneSelected = vgui.Create( "DButton" )
+		ClearZoneSelected:SetPos( ScrW() * 0.48, ScrH() * 0.68 )
+		ClearZoneSelected:SetText( "Clear Patrolzones" )
+		ClearZoneSelected:SetSize( 90, 30 )
+		ClearZoneSelected.DoClick = function()
+			--print( "Button was clicked!" )
+			canshow=1
+			net.Start("ClearZoneSelected")
+			net.SendToServer()
+		end
+
+		
+RequestAmmo:SetVisible(false)
+ClearZoneSelected:SetVisible(false)
+AddZoneSelected:SetVisible(false)
 DismissAirUnits:SetVisible(false)
 LaunMortar:SetVisible(false)
 MenuButtonMachines:SetVisible(false)
@@ -521,7 +625,6 @@ function SpawnOrder(selection)
 		net.Start("SpawnRequest")
 		net.WriteString(selection)
 		net.SendToServer()
-
 end
 
 function GM:HUDDrawTargetID()
@@ -536,101 +639,108 @@ if (!trace.HitNonWorld) then return end
 local text = "ERROR"
 local font = "TargetID"
 
-if (trace.Entity:IsPlayer()) then
-	text = trace.Entity:GetName()
-elseif trace.Entity:GetNWString("name") then
-	text = trace.Entity:GetNWString("name")
-else 
-	text=""
-end
 
-surface.SetFont( font )
-local w, h = surface.GetTextSize( text )
-local MouseX, MouseY = gui.MousePos()
-
-if ( MouseX == 0 && MouseY == 0 ) then
-	MouseX = ScrW() / 2
-	MouseY = ScrH() / 2
-end
-
-local x = MouseX
-local y = MouseY
-
-x = x - w / 2
-y = y + 30
-
--- The fonts internal drop shadow looks lousy with AA on
---draw.SimpleText( text, font, x+1, y+1, Color(0,0,0,120) )
---draw.SimpleText( text, font, x+2, y+2, Color(0,0,0,50) )
-draw.SimpleText( text, font, x, y, self:GetTeamColor( trace.Entity ) )
-
-y = y + h + 5
-if (trace.Entity:Health() > 0) then
-	text = "Health: "..trace.Entity:Health().. ""
-	font = "TargetIDSmall"
-end
-
-surface.SetFont( font )
-local w, h = surface.GetTextSize( text )
-local x = MouseX - w / 2
-draw.SimpleText( text, font, x, y, self:GetTeamColor( trace.Entity ) )
-
-if (trace.Entity:GetNWString("owner") == ""..localownerid.."") then
-
-
--- Squad
-y = y + h + 5
-if (trace.Entity:GetNWString("Squad") == "no") then
-	text = "No Squad"
-	font = "TargetIDSmall"
-elseif (trace.Entity:GetNWString("Squad") == "squad1") then
-	text = "Squad Alpha"
-elseif (trace.Entity:GetNWString("Squad") == "squad2") then
-	text = "Squad Bravo"
-	else text = ""
-end
-
-surface.SetFont( font )
-local w, h = surface.GetTextSize( text )
-local x = MouseX - w / 2
-draw.SimpleText( text, font, x, y, self:GetTeamColor( trace.Entity ) )
-
-
--- Hold Pos
-y = y + h + 5
-if (trace.Entity:GetNWString("HoldPosition") == "NO_VECTOR") then
-	text = "Not Holding Position"
-	font = "TargetIDSmall"
-else
-	text = "Holding Position"
-end
-
-surface.SetFont( font )
-local w, h = surface.GetTextSize( text )
-local x = MouseX - w / 2
-draw.SimpleText( text, font, x, y, self:GetTeamColor( trace.Entity ) )
-
-
-
-
--- Following
-y = y + h + 5
-if (trace.Entity:GetNWString("FollowMe") == "no") then
-	text = ""
-	font = "TargetIDSmall"
-else
-	text = "Following you"
-end
-
-surface.SetFont( font )
-local w, h = surface.GetTextSize( text )
-local x = MouseX - w / 2
-draw.SimpleText( text, font, x, y, self:GetTeamColor( trace.Entity ) )
-end
-end
-
-
+	if (trace.Entity:IsPlayer()) then
+	if trace.Entity:GetNWString("side") == "combine" then
+		text = trace.Entity:GetName()
+		else return false
+	end
+	elseif trace.Entity:GetNWString("name") then
+		text = trace.Entity:GetNWString("name")
+	else 
+		text=""
+	end
+	surface.SetFont( font )
+	local w, h = surface.GetTextSize( text )
+	local MouseX, MouseY = gui.MousePos()
 	
+	if ( MouseX == 0 && MouseY == 0 ) then
+		MouseX = ScrW() / 2
+		MouseY = ScrH() / 2
+	end
+	
+	local x = MouseX
+	local y = MouseY
+	
+	x = x - w / 2
+	y = y + 30
+	
+	-- The fonts internal drop shadow looks lousy with AA on
+	--draw.SimpleText( text, font, x+1, y+1, Color(0,0,0,120) )
+	--draw.SimpleText( text, font, x+2, y+2, Color(0,0,0,50) )
+	draw.SimpleText( text, font, x, y, self:GetTeamColor( trace.Entity ) )
+	
+	y = y + h + 5
+	if (trace.Entity:Health() > 0) then
+		text = "Health: "..trace.Entity:Health().. ""
+		font = "TargetIDSmall"
+		else text=""
+	end
+	
+	surface.SetFont( font )
+	local w, h = surface.GetTextSize( text )
+	local x = MouseX - w / 2
+	draw.SimpleText( text, font, x, y, self:GetTeamColor( trace.Entity ) )
+	
+	if (trace.Entity:GetNWString("owner") == ""..localownerid.."") and table.HasValue(CombineSoldiers, trace.Entity:GetClass()) then
+	-- Squad
+	y = y + h + 5
+	if (trace.Entity:GetNWString("Squad") == "no") then
+		text = "No Squad"
+		font = "TargetIDSmall"
+	elseif (trace.Entity:GetNWString("Squad") == "squad1") then
+		text = "Squad Alpha"
+	elseif (trace.Entity:GetNWString("Squad") == "squad2") then
+		text = "Squad Bravo"
+		else text = ""
+	end
+	
+	surface.SetFont( font )
+	local w, h = surface.GetTextSize( text )
+	local x = MouseX - w / 2
+	draw.SimpleText( text, font, x, y, self:GetTeamColor( trace.Entity ) )
+	
+	
+	-- Hold Pos
+	y = y + h + 5
+	if (trace.Entity:GetNWString("HoldPosition") == "NO_VECTOR") then
+		text = "Not Holding Position"
+		font = "TargetIDSmall"
+	else
+		text = "Holding Position"
+	end
+	
+	surface.SetFont( font )
+	local w, h = surface.GetTextSize( text )
+	local x = MouseX - w / 2
+	draw.SimpleText( text, font, x, y, self:GetTeamColor( trace.Entity ) )
+	
+	
+	
+	
+	-- Following
+	y = y + h + 5
+	if (trace.Entity:GetNWString("FollowMe") == "no") then
+		text = ""
+		font = "TargetIDSmall"
+	else
+		text = "Following you"
+	end
+	
+	surface.SetFont( font )
+	local w, h = surface.GetTextSize( text )
+	local x = MouseX - w / 2
+	draw.SimpleText( text, font, x, y, self:GetTeamColor( trace.Entity ) )
+	end
+end
+
+function Test()
+print("D")
+notification.AddProgress( "HuntedPreparation", "Say !ready to spawn where you are." )
+timer.Simple( 5, function()
+notification.Kill( "HuntedPreparation" )
+end )
+end
 
 function GM:PlayerFootstep( ply, pos, foot, sound, volume, rf ) 
      ply:EmitSound(table.Random(CombineBootSound), 35, 100) -- Play the footsteps hunter is using
@@ -655,7 +765,8 @@ end
 
 hook.Add( "PostDrawOpaqueRenderables", "random_box_beam", function()
 		for k,v in pairs(ents.GetAll()) do
-			if v:GetNWString("name") == "TheDocument" and ( LocalPlayer():GetPos():Distance( v:GetPos() ) ) > 200 and input.IsKeyDown(KEY_X ) then
+			if v:GetNWString("name") == "TheDocument" and input.IsKeyDown(KEY_X ) then
+			print("ddd")
 				local Vector1 = v:GetPos()
 				local Vector2 =  LocalPlayer():GetPos()+Vector(0,0,60)
 				render.SetMaterial( Material( "cable/redlaser" ) )
@@ -663,3 +774,50 @@ hook.Add( "PostDrawOpaqueRenderables", "random_box_beam", function()
 			end
 		end
 	end )
+
+	
+	
+
+function light()
+if LocalPlayer():GetNWString("side") == "rebel" then
+	timer.Simple( 0.2, light )
+	if LocalPlayer() then
+		if LocalPlayer():Alive() then
+			lightcol = (render.GetLightColor(LocalPlayer():GetPos())*Vector(100,100,100)):Length()
+			if LocalPlayer():Health() > 0 and LocalPlayer():GetActiveWeapon() != NULL then
+
+				if LocalPlayer():Crouching() then lightcol=lightcol-1 end
+				if LocalPlayer():FlashlightIsOn() then if lightcol < 20 then lightcol = lightcol+30 end end
+			end
+			if LocalPlayer():GetVelocity():Length() > 200 then lightcol=lightcol+2 end
+			if lightcol <= 2 then
+				if light_above_limit != 0 then
+				darkencolor = Color(0,255,0)
+					if LocalPlayer():GetVelocity():Length() < 240 then
+						if LocalPlayer():Alive() then
+							--light_above_limit=0
+							net.Start("light_below_limit")
+							net.SendToServer()
+						end
+					end
+				end
+			end	
+			if lightcol > 2 then
+				if  lightcol >= 2 and lightcol < 10 then
+					darkencolor = Color(190,190,190,255)
+				end
+				if lightcol > 10 then
+					darkencolor = Color(255,255,255,255)
+				end
+				if light_above_limit != 1 then
+					if LocalPlayer():Alive() then
+						--light_above_limit=1
+						net.Start("light_above_limit")
+						net.SendToServer()
+					end
+				end
+			end
+		end
+	end
+end
+end

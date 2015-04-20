@@ -4,6 +4,20 @@ GM.Email = "eddmalaga@gmail.com"
 GM.Website = "http://facepunch.com/showthread.php?t=1391522"
 
 
+playermodels = {
+"models/player/group03/male_01.mdl",
+"models/player/group03/male_02.mdl",
+"models/player/group03/male_03.mdl",
+"models/player/group03/male_04.mdl",
+"models/player/group03/male_05.mdl",
+"models/player/group03/male_06.mdl",
+"models/player/group03/male_07.mdl",
+"models/player/group03/male_08.mdl",
+"models/player/group03/male_09.mdl",
+}
+
+
+CantHideInPlainSight={"npc_zombie","npc_fastzombie","npc_poisonzombie","npc_combine_s","npc_metropolice","npc_helicopter","npc_gunship"}
 HLRenaissance1 = {"monster_alien_controller","monster_alien_grunt","monster_alien_slave",}
 HLRenaissance2 = {"monster_gonome",}
 HLRenaissance3 = {"monster_bullchicken","npc_devilsquid","npc_frostsquid","monster_houndeye"}
@@ -12,13 +26,9 @@ HLRenaissanceBosses={"monster_gargantua","monster_bigmomma","monster_babygarg"}
 
 ZombiesDrop = {"weapon_shotgun","weapon_smg1","weapon_frag","weapon_ar2","item_box_buckshot","weapon_crowbar","weapon_357","weapon_crossbow","item_healthkit"}
 
-RelationshipIssuesSet={"npc_sniper"}
-RelationshipIssuesAddEntity={"npc_fassassin","npc_cremator"}
-NoRelationshipIssues={"npc_combine_s", "npc_metropolice","npc_hunter","npc_rollermine","npc_helicopter","npc_gunship","npc_manhack","npc_turret_floor","npc_turret_ceiling","npc_combinedropship"}
-
-CombineSoldiers = {"npc_combine_s", "npc_metropolice","npc_hunter","npc_fassassin","npc_cremator","npc_rollermine","npc_sniper"}
+CombineSoldiers = {"npc_combine_s", "npc_metropolice","npc_hunter","npc_fassassin","npc_cremator","npc_rollermine"}
 CombineHelicopters = {"npc_helicopter","npc_combinegunship","npc_combinedropship"}
-AllCombineEntities = {"npc_combine_s", "npc_metropolice","npc_hunter","npc_fassassin","npc_cremator","npc_rollermine","npc_helicopter","npc_combinegunship","npc_manhack","npc_turret_floor","npc_turret_ceiling","npc_combinedropship","npc_sniper"}
+AllCombineEntities = {"npc_combine_s", "npc_metropolice","npc_hunter","npc_fassassin","npc_cremator","npc_rollermine","npc_helicopter","npc_combinegunship","npc_manhack","npc_turret_floor","npc_turret_ceiling","npc_combinedropship","npc_sniper","combine_hoppermine"}
 REBEL_WEAPONS = { "ai_weapon_crossbow","ai_weapon_smg1","ai_weapon_shotgun","ai_weapon_ar2"}
 
 Zombies = {"npc_zombie","npc_fastzombie","npc_poisonzombie","npc_zombine"}
@@ -35,8 +45,17 @@ SPAWNPOINTS = {
 
 function ISaid( ply, text, public )
 	
+  if text == "!help" then
 
-    if text == "!deploysoldiers" and CountCombine() < GetConVarNumber("css_max_combine")+( table.Count(player.GetAll())*2) then
+	timer.Simple(1, function() ply:SendLua("notification.AddLegacy('Spawn your soldiers using the Q menu. Select them with E while alive, Left  Click while dead.',   NOTIFY_HINT  , 10 )")
+	end)
+	timer.Simple(12, function() ply:SendLua("notification.AddLegacy('say !hordes, !antlions, !zombies, !document or !hunted to start a minimode.',   NOTIFY_HINT  , 10 )")
+	end)
+timer.Simple(24, function() ply:SendLua("notification.AddLegacy('Every enemy your Squad kills, its a point for you. These points are used to buy units.',   NOTIFY_HINT  , 10 )")
+end)
+end
+
+    if text == "!deploysoldiers" and CountCombine() < GetConVarNumber("squad_survival_max_combine")+( table.Count(player.GetAll())*2) then
 			for k, v in pairs(ents.FindByClass("npc_combinedropship")) do
 			SpawnCombineSRappel(v:GetPos()+Vector(50,0,-100),ply:EntIndex())
 			SpawnCombineSRappel(v:GetPos()+Vector(-50,0,-100),ply:EntIndex())
@@ -53,16 +72,108 @@ function ISaid( ply, text, public )
 		return false 
 	end
 
-if GetConVarNumber("css_extra_beta_npcs") == 1 then
-    if text == "!assassin" and CountCombine() < GetConVarNumber("css_max_combine")+( table.Count(player.GetAll())*2) then
+if GetConVarNumber("squad_survival_extra_beta_npcs") == 1 then
+    if text == "!assassin" and CountCombine() < GetConVarNumber("squad_survival_max_combine")+( table.Count(player.GetAll())*2) then
 		SpawnCombineAssasin(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
 		return false
 	end
-    if text == "!cremator" and CountCombine() < GetConVarNumber("css_max_combine")+( table.Count(player.GetAll())*2) then
+    if text == "!cremator" and CountCombine() < GetConVarNumber("squad_survival_max_combine")+( table.Count(player.GetAll())*2) then
 		SpawnCombineCremator(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
 		return false
 	end
 end
+
+
+	    if text == "!hunted" and ply:GetNWString("side") == "combine" then
+		ply:SendLua('notification.AddProgress( "HuntedPreparation", "Say !ready to spawn where you are." )')
+		ply.huntedready=1
+		timer.Simple(1, function()ply:SendLua("light()") end)
+	for k, v in pairs(ply:GetWeapons() ) do
+	v:SetRenderMode( RENDERMODE_TRANSALPHA )
+	v:SetColor(Color(255,255,255,0))
+	end
+	ply:SetRenderMode( RENDERMODE_TRANSALPHA )
+	ply:SetColor(  Color(255,255,255,0))
+		ply:SetModel(table.Random(playermodels))
+		ply:SetupHands()
+		ply:SetNoTarget(true)
+		ply:SetNWString("side", "rebel")
+		ply:StripAmmo()
+		ply:StripWeapons()		
+		ply:SetMoveType(MOVETYPE_NOCLIP)
+		for k, v in pairs(player.GetAll() ) do 
+		if v:EntIndex() != ply:EntIndex() then
+			v:SendLua("notification.AddLegacy('Hunted minimode started. All players must find and kill "..ply:GetName()..".',    NOTIFY_ERROR   , 5 )")	
+			end
+		end
+
+		return false
+		end			
+			
+		if text == "!ready" and ply.huntedready==1 then
+			ply:SendLua('notification.Kill( "HuntedPreparation" )')
+			for k, v in pairs(player.GetAll() ) do 
+				if v:EntIndex() != ply:EntIndex() then
+					v:SendLua("notification.AddLegacy('The Hunted has appeared!',    NOTIFY_HINT   , 5 )")
+				end
+			end
+			ply.huntedready = 0
+
+			for k, v in pairs(ply:GetWeapons() ) do
+				v:SetRenderMode( RENDERMODE_TRANSALPHA )
+				v:SetColor(Color(255,255,255,255))
+			end
+			ply:SetRenderMode( RENDERMODE_TRANSALPHA )
+			ply:SetColor(  Color(255,255,255,255))
+			ply:SetNoTarget(false)
+			ply:SetMoveType(MOVETYPE_WALK )
+			UpdateRelationships()
+			if GetConVarString("squad_survival_player_loadout") == "" then else
+				print("[Combine Squad Survival]: Loaded "..GetConVarString("squad_survival_player_loadout").." for the players at start.")
+				local sentence = ""..GetConVarString("squad_survival_player_loadout")..""
+				local words = string.Explode( ",", sentence )
+				table.foreach(words, function(key,value)
+					ply:Give(value)
+				end)
+				ply:GiveAmmo( 15, "Buckshot", true )
+				ply:GiveAmmo( 350, "AR2", true )
+				ply:GiveAmmo( 2, "Grenade", true )	
+			end	
+			return false
+		end			
+
+		
+		if text == "!stophunted" and ply.huntedready == 1 then
+		ply:SendLua('notification.Kill( "HuntedPreparation" )')
+		for k, v in pairs(player.GetAll() ) do 
+			if ply != v then
+				v:SendLua("notification.AddLegacy('"..ply:GetName().." is no longer Hunted!',    NOTIFY_HINT   , 5 )")
+			end
+		end
+			ply.huntedready = 0
+			ply:SetNWString("side","combine")
+			for k, v in pairs(ply:GetWeapons() ) do
+			v:SetRenderMode( RENDERMODE_TRANSALPHA )
+			v:SetColor(Color(255,255,255,255))
+			end
+			ply:SetRenderMode( RENDERMODE_TRANSALPHA )
+			ply:SetColor(  Color(255,255,255,255))
+			ply:SetNoTarget(false)
+			ply:SetMoveType(MOVETYPE_WALK )
+			if GetConVarString("squad_survival_player_loadout") == "" then else
+				print("[Combine Squad Survival]: Loaded "..GetConVarString("squad_survival_player_loadout").." for the players at start.")
+				local sentence = ""..GetConVarString("squad_survival_player_loadout")..""
+				local words = string.Explode( ",", sentence )
+				table.foreach(words, function(key,value)
+					ply:Give(value)
+				end)
+				ply:GiveAmmo( 15, "Buckshot", true )
+				ply:GiveAmmo( 350, "AR2", true )
+				ply:GiveAmmo( 2, "Grenade", true )	
+			end			
+			UpdateRelationships()
+
+		end
 
 	    if text == "!hordes" and started != 1 then
 		started=1
@@ -79,21 +190,27 @@ end
 	    if text == "!document" then Minimode_FindTheDocuments() return false end
 		
 	    if text == "!zombies" and started != 1 then
-		ZombieWave()
+		for k, v in pairs(player.GetAll() ) do 
+				v:SendLua("notification.AddLegacy('"..ply:GetName().." started a Zombies wave!',    NOTIFY_HINT   , 5 )")
+		end
+		--ZombieWave()
 		PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Zombies are coming.") 
-		timer.Create( "ZombieWave", 2, 20, ZombieWave )
+		timer.Create( "ZombieWave", 0.5, 20, ZombieWave )
 		WaveNumber=WaveNumber+1
 		for k, v in pairs(player.GetAll()) do
-	v:GiveAmmo( 15, "Buckshot", true )
-	v:GiveAmmo( 150, "AR2", true )
-	v:GiveAmmo( 1, "Grenade", true )	
+			v:GiveAmmo( 15, "Buckshot", true )
+			v:GiveAmmo( 150, "AR2", true )
+			v:GiveAmmo( 1, "Grenade", true )	
 		end
 		return false
 		end
 		
 	    if text == "!antlions" and started != 1 then
-		PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Antlions are coming.") 
-		timer.Create( "AntLionWave", 2, 20, AntLionWave )
+		for k, v in pairs(player.GetAll() ) do 
+				v:SendLua("notification.AddLegacy('"..ply:GetName().." started an Antlion wave!',    NOTIFY_HINT   , 5 )")
+		end
+		--PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Antlions are coming.") 
+		timer.Create( "AntLionWave", 0.5, 20, AntLionWave )
 		WaveNumber=WaveNumber+1
 		for k, v in pairs(player.GetAll()) do
 	v:GiveAmmo( 15, "Buckshot", true )
@@ -103,7 +220,9 @@ end
 		return false
 		end
 		
-	    if text == "!rebels" and started != 1 then
+	    if text == "!rebels" then
+		ply:SendLua("notification.AddLegacy('Rebel waves are disabled until I fix them.',    NOTIFY_ERROR   , 5 )")
+		/*
 		PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Rebels are coming.") 
 		timer.Create( "RebelWave", 2, 20, RebelWave )
 		WaveNumber=WaveNumber+1
@@ -113,9 +232,9 @@ end
 	v:GiveAmmo( 1, "Grenade", true )	
 		end
 		return false
+		*/
 		end
-
-	if	GetConVarNumber("css_hlrenaissance") == 1 then
+	if	GetConVarNumber("squad_survival_hlrenaissance") == 1 then
 		    if text == "!hlrenaissance1" and started != 1 then
 		PrintMessage(HUD_PRINTTALK, "[Overwatch]: Done.") 
 		timer.Create( "hlrenaissance1", 2, 20, hlrenaissance1 )
@@ -205,7 +324,7 @@ CombineChat_Damaged = {"npc/combine_soldier/vo/coverhurt.wav",
 CombineChat_Kill = {"npc/combine_soldier/vo/contained.wav","npc/combine_soldier/vo/hasnegativemovement.wav","npc/combine_soldier/vo/onecontained.wav","npc/combine_soldier/vo/onedown.wav","npc/combine_soldier/vo/stabilizationteamhassector.wav"}
 
 CombineChat_Dead={"npc/combine_soldier/vo/heavyresistance.wav","npc/combine_soldier/vo/overwatchsectoroverrun.wav","npc/combine_soldier/vo/overwatchteamisdown.wav",""}
-
+CombineChat_Killed={"npc/combine_soldier/die1.wav","npc/combine_soldier/die1.wav","npc/combine_soldier/die1.wav"}
 
 CombineChat_Idle = {"npc/combine_soldier/vo/sightlineisclear.wav","npc/combine_soldier/vo/stabilizationteamholding.wav","npc/combine_soldier/vo/overwatchconfirmhvtcontained.wav","npc/combine_soldier/vo/reportingclear.wav","npc/combine_soldier/vo/hasnegativemovement.wav","npc/combine_soldier/vo/reportallradialsfree.wav","npc/combine_soldier/vo/reportallpositionsclear.wav","npc/combine_soldier/vo/stayalertreportsightlines.wav","npc/combine_soldier/vo/sectorissecurenovison.wav","npc/combine_soldier/vo/standingby].wav","npc/combine_soldier/vo/teamdeployedandscanning.wav","npc/metropolice/vo/wearesociostablethislocation.wav"}
 

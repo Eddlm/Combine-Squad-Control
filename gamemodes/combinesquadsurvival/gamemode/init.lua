@@ -21,7 +21,16 @@ util.AddNetworkString( "squad2followme" )
 util.AddNetworkString( "regroupsquad2" )
 util.AddNetworkString( "PlayerKillNotice" )
 util.AddNetworkString( "SpawnRequest" )
+util.AddNetworkString( "addzoneselected" )
+util.AddNetworkString( "ClearZoneSelected" )
 
+util.AddNetworkString( "light_below_limit" )
+util.AddNetworkString( "light_above_limit" )
+util.AddNetworkString( "Visible" )
+util.AddNetworkString( "NotVisible" )
+util.AddNetworkString( "Spotted" )
+util.AddNetworkString( "Hidden" )
+util.AddNetworkString( "RequestAmmo" )
 
 util.PrecacheModel("models/Combine_Soldier.mdl")
 util.PrecacheModel("models/Combine_Super_Soldier.mdl")
@@ -32,13 +41,110 @@ util.PrecacheModel("models/zombie/poison.mdl")
 
 
 
+
+net.Receive( "RequestAmmo", function( length, client )
+
+		if client:Frags() >= 50 then 
+		local targetTrace = util.QuickTrace( client:GetEyeTraceNoCursor().HitPos, Vector(0,0,900), client)
+		SpawnProp(targetTrace.HitPos,client:GetAngles(),"models/props_junk/wood_crate001a.mdl") 
+		client:AddFrags(-50)
+		else
+		client:SendLua("notification.AddLegacy('You cannot afford an Ammo drop with less than 50 points.',   NOTIFY_HINT  , 6 )")
+		end
+
+end )
+
+
+net.Receive( "light_above_limit", function( length, client )
+if client.huntedready==0 then 
+	net.Start( "Visible" )
+	net.Send(client)
+	client:SetNoTarget(false)
+	client:SendLua(	"light_above_limit = 1" )	
+	for k, v in pairs(client:GetWeapons() ) do
+	v:SetRenderMode( RENDERMODE_TRANSALPHA )
+	v:SetColor(Color(255,255,255,255))
+	end
+client:SetRenderMode( RENDERMODE_TRANSALPHA )
+client:SetColor(  Color(255,255,255,255))
+end
+end )
+
+
+net.Receive( "light_below_limit", function( length, client )
+local hidden=1
+	for k, v in pairs(ents.FindInSphere(client:GetPos(),5000)) do
+			if table.HasValue(CantHideInPlainSight, v:GetClass())then
+			if v:Health() > 0 then
+				if v:Visible(client) and v:GetEnemy() then
+					hidden=0
+					client:PrintMessage(HUD_PRINTCENTER , ""..v:GetName().." saw you hide.")
+					break
+				end
+			end
+		end
+	
+	end
+	if hidden==1 then client:SetNoTarget(true)
+		client.spotted =  0
+		net.Start( "Hidden" )
+		net.Send(client)
+		net.Start( "NotVisible" )
+		net.Send(client)
+		client:SendLua(	"light_above_limit = 0" )		
+	for k, v in pairs(client:GetWeapons() ) do
+	v:SetRenderMode( RENDERMODE_TRANSALPHA )
+	v:SetColor(Color(255,255,255,20))
+	end
+client:SetRenderMode( RENDERMODE_TRANSALPHA )
+client:SetColor(  Color(255,255,255,20))
+	end
+end)
+
+
+net.Receive( "addzoneselected", function( length, client )
+
+		for k, v in pairs(ents.GetAll()) do
+			if v:GetNWString("selected") == "1" and v:GetNWString("owner") == ""..client:EntIndex().."" then
+			print(v:GetClass())
+			if !v.patrolzones then v.patrolzones = {} end
+			table.insert(v.patrolzones, client:GetEyeTraceNoCursor().HitPos)
+			PrintTable(v.patrolzones)
+			 v.patrol = 1
+			end
+		end
+end)
+
+net.Receive( "ClearZoneSelected", function( length, client )
+
+		for k, v in pairs(ents.GetAll()) do
+			if v:GetNWString("selected") == "1" and v:GetNWString("owner") == ""..client:EntIndex().."" then
+			print(v:GetClass())
+			table.Empty(v.patrolzones)
+			 v.patrol = 0
+			end
+		end
+		
+end)
+
 net.Receive( "SpawnRequest", function( length, client )
 local data = net.ReadString()
 PrintMessage(HUD_PRINTTALK, net.ReadString())
+
+/*
+		local canspawn=1
+		table.foreach(ents.GetAll(), function(key,player)
+			if player:GetNWString("side") == "rebel" and player != ply then
+			canspawn=1 -- lel
+			end
+		end)
+*/
+
+
 if CanSpawnCombine==1 then
-	if CountPlayerCombine(client:EntIndex()) < GetConVarNumber("css_max_combine_per_player") 
+	if CountPlayerCombine(client:EntIndex()) < GetConVarNumber("squad_survival_max_combine_per_player")
 	then
-		if data == "Soldier" then SpawnCombineS(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
+		if data == "Soldier" then SpawnCombineS(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex())
 		end
 		if data == "Shotgunner" then SpawnCombineShotgunner(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),client:EntIndex()) 
 		end
@@ -60,19 +166,24 @@ if CanSpawnCombine==1 then
 		end
 		
 		if data == "CeilingTurret" then
-			traceRes = util.QuickTrace(client:GetEyeTraceNoCursor().HitPos, Vector(0,0,200), player.GetAll())
+			traceRes = util.QuickTrace(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,0), Vector(0,0,50), player.GetAll())
 			if traceRes.Hit then
 				SpawnCeilingTurretStrong(client:GetEyeTraceNoCursor().HitPos,client:GetAngles(),client:EntIndex())
 			else 
-				client:PrintMessage(HUD_PRINTTALK, "Combine Cameras can only spawn on a ceiling.") 	
+				client:SendLua("notification.AddLegacy('Combine Cameras can only spawn on a ceiling.',    NOTIFY_ERROR   , 5 )")
 			end
 		end
-	else
-				client:PrintMessage(HUD_PRINTTALK, "You have passed the combine-per-player limit ("..GetConVarNumber("css_max_combine_per_player")..")") 	
-	end
-	
 	if data == "Rollermine" then SpawnRollermine(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,20),client:EntIndex()) 
 	end
+	
+	if data == "Mine" then SpawnCombineMine(client:GetEyeTraceNoCursor().HitPos+Vector(0,0,20),client:EntIndex()) 
+	end
+	
+	else
+				client:PrintMessage(HUD_PRINTTALK, "You have passed the combine-per-player limit ("..GetConVarNumber("squad_survival_max_combine_per_player")..")") 	
+	end
+	
+
 	
 	
 	
@@ -97,26 +208,18 @@ if CanSpawnCombine==1 then
 end
 
 if data == "Mortar" then
-
-if canistersavailable == 1 then
-	local vector = client:GetEyeTraceNoCursor().HitPos
-
-	timer.Simple(2,function() SpawnCanister(vector) end)
-	timer.Simple(3,function() SpawnCanister(vector+Vector(100,100,0)) end)
-	timer.Simple(4,function() SpawnCanister(vector+Vector(-100,-100,0)) end)
-	timer.Simple(5,function() SpawnCanister(vector+Vector(100,-100,0)) end)
-	timer.Simple(6,function() SpawnCanister(vector+Vector(-100,100,0)) end)
-
+if client:Frags() >= 100 then
+	timer.Create( "Mortar", 3, 20, LaunchMortarRound ) 	
 	client:EmitSound("npc/combine_soldier/vo/overwatchrequestskyshield.wav")
-	PrintMessage(HUD_PRINTTALK, "[Overwatch]: Requested mortar round at "..tostring(client:GetEyeTraceNoCursor().HitPos).."") 
-	canistersavailable=0
 	
-	else
-		client:PrintMessage(HUD_PRINTTALK, "[Overwatch]: Mortar rounds unavailable at the moment.") 
+	client:AddFrags(-100)
+	else client:SendLua("notification.AddLegacy('You cannot afford Mortar Rounds with less than 100 points.',    NOTIFY_ERROR   , 5 )")
 	end
 end
 
 if data == "DismissAirUnits" then 
+
+
 
 			for k, v in pairs(ents.FindByClass("npc_combinedropship")) do
 			v:Remove()
@@ -156,16 +259,15 @@ timer.Simple(30, function()
 CanSpawnCombine=0
 		local randomnumber = math.random(1,2)
 		if randomnumber == 1 then
-		timer.Create( "ZombieWave", 2, 20, ZombieWave )
+		timer.Create( "ZombieWave", 0.5, 20, ZombieWave )
 		PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Necrotics are coming.")
 		elseif randomnumber == 2 then
-		timer.Create( "AntLionWave", 2, 20, AntLionWave )
+		timer.Create( "AntLionWave", 0.5, 20, AntLionWave )
 		PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Antlions are coming.")
 		end
 end)
 end
-
-
+	
 function CountEntity(ent)
 local entities=0
 		for k, v in pairs(ents.GetAll()) do
@@ -366,6 +468,12 @@ else
 randompl = table.Random(ents.FindByClass("player"))
 end
 --PrintMessage(HUD_PRINTTALK, ""..randompl:GetClass().."")
+if CountEnemies() < 1 then MoreWaves() end
+--PrintMessage(HUD_PRINTTALK, "EnemiesLeft: "..EnemiesLeft.."")
+
+end
+
+function CountEnemies()
 
 local	EnemiesLeft=0
 for k,zombi in pairs(ents.GetAll()) do 
@@ -383,15 +491,22 @@ elseif zombi:GetClass() == "npc_citizen" then
 	zombi:SetSchedule( SCHED_ESTABLISH_LINE_OF_FIRE )
 	end
 end
-PrintMessage(HUD_PRINTTALK, "EnemiesLeft: "..EnemiesLeft.."")
-
-if EnemiesLeft < 1 then MoreWaves() end
+return EnemiesLeft
 end
 
-function GM:Think()
 
- if CurTime() > gamemodetime+GetConVarNumber("css_think_cycle") then
-gamemodetime = CurTime()
+function GM:Think()
+ if CurTime() > fiveseccycletime then
+fiveseccycletime = CurTime()
+	for k, v in pairs(player.GetAll()) do
+		v:SendLua("playerfrags= "..v:Frags().."")
+	end
+
+
+end
+
+ if CurTime() > shortcycletime+GetConVarNumber("squad_survival_think_cycle") then
+shortcycletime = CurTime()
 
 	for k, v in pairs(ents.FindByClass("path_track")) do
 		v:Remove()
@@ -422,17 +537,17 @@ gamemodetime = CurTime()
 				v:Fire("SetTrack", "HeliTrack")	
 			end	
 		end
-		if table.HasValue(CombineSoldiers, v:GetClass()) then
+		if table.HasValue(CombineSoldiers, v:GetClass())  and !v:CreatedByMap() then
 		 owner = ents.GetByIndex(v:GetNWString("owner"))
 
 				if v:GetNWVector("HoldPosition") != "NO_VECTOR"  then
 					if v:GetNWString("Squad") == "no" then
-						if v:GetPos():Distance(v:GetNWVector("HoldPosition")) > GetConVarNumber("css_hold_position_tolerance") and !v:IsCurrentSchedule(50) then
+						if v:GetPos():Distance(v:GetNWVector("HoldPosition")) > GetConVarNumber("squad_survival_hold_position_tolerance") and !v:IsCurrentSchedule(50) then
 							v:SetLastPosition(v:GetNWVector("HoldPosition"))
 							v:SetSchedule(SCHED_FORCED_GO_RUN)			
 						end
 					else			
-						if v:GetPos():Distance(v:GetNWVector("HoldPosition")) > GetConVarNumber("css_hold_position_tolerance") and !v:IsCurrentSchedule(50) then
+						if v:GetPos():Distance(v:GetNWVector("HoldPosition")) > GetConVarNumber("squad_survival_hold_position_tolerance") and !v:IsCurrentSchedule(50) then
 							v:SetLastPosition(v:GetNWVector("HoldPosition"))
 							v:SetSchedule(SCHED_FORCED_GO_RUN)			
 						end			
@@ -449,13 +564,18 @@ gamemodetime = CurTime()
 					end
 				
 				if !v:GetEnemy() and v:Health() < 100 then v:SetHealth(v:Health()+1) end
-
+				if !v:GetEnemy() and !v:IsMoving() and v.patrol == 1 then
+				v:SetLastPosition(table.Random(v.patrolzones))
+				v:SetSchedule(SCHED_FORCED_GO)
+				end
+				
+				
 		end
 end
 
 
 
-	if !v:CreatedByMap() and !table.HasValue(AllCombineEntities, v:GetClass()) and v:IsNPC() and !v:IsMoving() and !v:GetEnemy() then
+	if !v:CreatedByMap() and !table.HasValue(AllCombineEntities, v:GetClass()) and v:IsNPC() and !v:GetEnemy() then
 		if CountEntity("npc_combine_s") > 0 then
 		randompl = table.Random(ents.FindByClass("npc_combine_s"))
 		else
@@ -469,6 +589,48 @@ end
 end
 end
 
+
+function AddPatrolZone(ply)
+print("added.")
+		for k, v in pairs(ents.GetAll()) do
+			if v:GetNWString("selected") == "1" and v:GetNWString("owner") == ""..ply:EntIndex().."" then
+			print(v:GetClass())
+			if !v.patrolzones then v.patrolzones = {} end
+			table.insert(v.patrolzones, ply:GetEyeTraceNoCursor().HitPos)
+			PrintTable(v.patrolzones)
+			 v.patrol = 1
+			end
+		end
+
+end
+
+
+function ClearPatrolZones(ply)
+print("added.")
+		for k, v in pairs(ents.GetAll()) do
+			if v:GetNWString("selected") == "1" and v:GetNWString("owner") == ""..ply:EntIndex().."" then
+			print(v:GetClass())
+			table.Empty(v.patrolzones)
+			 v.patrol = 0
+			end
+		end
+
+end
+
+
+function Patrol(ply)
+print("added.")
+		for k, v in pairs(ents.GetAll()) do
+			if v:GetNWString("selected") == "1" and v:GetNWString("owner") == ""..ply:EntIndex().."" then
+			/*
+			print(v:GetClass())
+			v:SetLastPosition(table.Random(v.patrolzones))
+			v:SetSchedule(SCHED_FORCED_GO)
+			*/
+			end
+		end
+
+end
 --- Squad 2
 net.Receive( "regroupsquad2", function( length, client )
 client:EmitSound(table.Random(CombineChat_Regroup), 75, 100)
@@ -889,35 +1051,59 @@ end)
 --- Squad 1
 
 
+
+function DeathSound()
+	return true
+end
+hook.Add("PlayerDeathSound", "DeathSound", DeathSound)
+
+
+function GM:DoPlayerDeath(ply,attacker,dmg)
+ply:EmitSound(table.Random(CombineChat_Killed), 20, 100)
+if attacker:IsPlayer() and attacker:GetNWString("side") == ply:GetNWString("side") and attacker != ply then
+if attacker.teamkiller == 1 then
+attacker:Kick("Do not kill your teammates next time")
+else
+attacker.teamkiller = 1
+attacker:SendLua("notification.AddLegacy('This is a cooperative game! Dont kill your teammates.',    NOTIFY_ERROR   , 10 )")
+end
+end
+
+ply:CreateRagdoll() 
+end
 function GM:PlayerDeathThink(ply)
 local info=ply:GetEyeTraceNoCursor()
 
-	if ply:KeyPressed(IN_ATTACK) then
+	if ply:KeyPressed(IN_ATTACK2) then
 	if ply:OnGround() then
-		PrintMessage(HUD_PRINTTALK, "Spawn using right click.")
+		ply:PrintMessage(HUD_PRINTTALK, "Commander mode.")
+		ply:PrintMessage(HUD_PRINTTALK, "Select your troops using right click.")
+		local canspawn=1
+		table.foreach(ents.GetAll(), function(key,player)
+			if player:GetNWString("side") == "rebel" then
+			canspawn=0 
+			end
+		end)
+		if canspawn==1 then
 		ply:UnSpectate()
 		ply:Spectate(6)
 		ply:SetMoveType(10)
-
+		else
+		ply:SendLua("notification.AddLegacy('You cannot spectate while there is a player being Hunted.',   NOTIFY_HINT  , 6 )")
+		end
 		elseif table.HasValue(AllCombineEntities, info.Entity:GetClass()) and info.Entity:GetNWString("owner") == "none" or info.Entity:GetNWString("owner") == ""..ply:EntIndex()..""
 			then
-			print(info.Entity:GetClass())
-			--print(GetNWString("selected"))
 			if info.Entity:GetNWString("selected") == "0" then	
-			--ply:EmitSound(table.Random(CombineChat_Select), 75, 100)
-			if !info.Entity:GetEnemy() and CanTalk==1 then  info.Entity:EmitSound(table.Random(CombineChat_Idle), 75, 100) CanTalk=0 timer.Simple(1,function() CanTalk=1 end) end
-
-			info.Entity:SetNWString("selected","1")
-			info.Entity:SetNWString("owner",""..ply:EntIndex().."")
-		--	info.Entity:SetKeyValue("squadname", ""..ply:EntIndex().."")
-			print(""..ply:EntIndex().."")
-			elseif info.Entity:GetNWString("selected") == "1" then		
-			info.Entity:SetNWString("selected","0")
+					if !info.Entity:GetEnemy() and CanTalk==1 then  info.Entity:EmitSound(table.Random(CombineChat_Idle), 75, 100) CanTalk=0 timer.Simple(1,function() CanTalk=1 end) end
+				info.Entity:SetNWString("selected","1")
+				info.Entity:SetNWString("owner",""..ply:EntIndex().."")
+				elseif info.Entity:GetNWString("selected") == "1" then		
+				info.Entity:SetNWString("selected","0")
 			end
 		end
 	end
 
-	if ply:KeyPressed(IN_ATTACK2) then
+	if ply:KeyPressed(IN_ATTACK) then
 			ply:UnSpectate()
 			ply:Spawn()
 	end
@@ -953,25 +1139,40 @@ end
 
 
 function GM:PlayerSpawn(ply)
-	--ply:SetTeam(1)
+
 	ply:SetCustomCollisionCheck(true)
 	ply:StripAmmo()
 	ply:StripWeapons()
 	ply:SetCollisionGroup(0)
 
-	if GetConVarString("css_player_loadout") == "" then else
-			print("[Combine Squad Survival]: Loaded "..GetConVarString("css_player_loadout").." for the players at start.")
-			local sentence = ""..GetConVarString("css_player_loadout")..""
+if ply:GetNWString("side") == "rebel" then
+	ply:SendLua('notification.AddProgress( "HuntedPreparation", "Say !ready to spawn where you are. say !stophunted to become combine again." )')
+	ply.huntedready=1
+	timer.Simple(1, function()ply:SendLua("light()") end)
+			for k, v in pairs(ply:GetWeapons() ) do
+			v:SetRenderMode( RENDERMODE_TRANSALPHA )
+			v:SetColor(Color(255,255,255,0))
+			end
+	ply:SetRenderMode( RENDERMODE_TRANSALPHA )
+	ply:SetColor(  Color(255,255,255,0))
+	ply:SetModel(table.Random(playermodels))
+	ply:SetupHands()
+	ply:SetNoTarget(true)
+	ply:SetMoveType(MOVETYPE_NOCLIP)
+
+
+else
+
+
+	if GetConVarString("squad_survival_player_loadout") == "" then else
+			print("[Combine Squad Survival]: Loaded "..GetConVarString("squad_survival_player_loadout").." for the players at start.")
+			local sentence = ""..GetConVarString("squad_survival_player_loadout")..""
 			local words = string.Explode( ",", sentence )
 		table.foreach(words, function(key,value)
 			ply:Give(value)
 		end)
 	end
-	/*
-	ply:Give("weapon_shotgun")
-	ply:Give("weapon_ar2")
-	ply:Give("weapon_frag")
-	*/
+
 	ply:GiveAmmo( 15, "Buckshot", true )
 	ply:GiveAmmo( 150, "AR2", true )
 	ply:GiveAmmo( 1, "Grenade", true )		
@@ -984,35 +1185,60 @@ function GM:PlayerSpawn(ply)
 	ply:AllowFlashlight(true)
 	ply:SetNoCollideWithTeammates(1)
 
+	
+end
+UpdateRelationships()
+
+end
+function UpdateRelationships()
+
+table.foreach(ents.GetAll(), function(key,npc)
+	if table.HasValue(AllCombineEntities, npc:GetClass()) and npc:GetClass() != "combine_hoppermine"then
+		table.foreach(player.GetAll(), function(key,value)
+			if value:GetNWString("side") == "combine"  then
+			--	print("likes")
+				npc:AddEntityRelationship( value, D_LI, 99 )
+				else
+			--	print("hates")
+				npc:AddEntityRelationship( value, D_HT, 99 )
+			end	
+		end)
+	end
+	
+	if npc:GetClass() == "npc_citizen" then
+		table.foreach(player.GetAll(), function(key,value)
+			if value:GetNWString("side") == "combine"  then
+			--	print("likes")
+				npc:AddEntityRelationship( value, D_HT, 99 )
+				else
+			--	print("hates")
+				npc:AddEntityRelationship( value, D_LI, 99 )
+			end	
+		end)
+	end
+end)
+
+
+
 
 end
 
 function GM:OnEntityCreated(entity)
-
-
+entity:SetName(entity:GetClass()) 
 if entity:GetModel("models/combine_dropship_container.mdl")  then
 	entity:SetCollisionGroup(1)
-
 end
 
  if table.HasValue(AllCombineEntities, entity:GetClass()) then
 
- /*
-if table.Count(ents.GetByIndex(tonumber(entity:GetNWString("owner")))) > 0 
- then
- timer.Simple(1, function()  
- 	local owner = ents.GetByIndex(tonumber(entity:GetNWString("owner")))
- 	owner:SendLua("totalcombinenumber="..CountPlayerCombine(owner:EntIndex()).."")
- end)
-end
-*/
-	entity:AddRelationship(  "player D_LI 99")
-	entity:SetNWString("selected","0")
-	entity:SetNWVector("HoldPosition","NO_VECTOR")
-	entity:SetNWString("FollowMe", "no")
-	entity:SetNWString("Squad", "")
-	if GetConVarNumber("css_combine_nocollide") == 1 then
-	entity:SetCollisionGroup(11)
+	if table.HasValue(CombineSoldiers, entity:GetClass()) then
+		entity:SetNWString("selected","0")
+		entity:SetNWVector("HoldPosition","NO_VECTOR")
+		entity:SetNWString("FollowMe", "no")
+		entity:SetNWString("Squad", "")
+		if GetConVarNumber("squad_survival_combine_nocollide") == 1 then
+		entity:SetCollisionGroup(11)
+		end
 	end
 elseif entity:IsNPC() then
 	if entity:GetClass() == "npc_headcrab_fast" then entity:SetName("Fast Headcrab") end
@@ -1033,15 +1259,11 @@ elseif entity:IsNPC() then
 		entity:AddRelationship( ""..value.." D_HT 20" )
 	end)
 	end
-	
-	
-if entity:GetNWString("owner") then
-
-end
-print("Entity created: "..entity:GetClass().."")
-
+	UpdateRelationships()
 end
 function SpawnRollermine( pos,owner )
+local ply = ents.GetByIndex(tonumber(owner))
+if ply:Frags() >= 10 then
 	NPC = ents.Create( "npc_rollermine" )
 	NPC:SetPos(pos)
 	NPC:Spawn()
@@ -1054,14 +1276,20 @@ function SpawnRollermine( pos,owner )
 	NPC:SetNWString("Squad", "no")
 	NPC:SetKeyValue("squadname", "Combine")
 	NPC:SetNWString("name","Rollermine")
+	ply:AddFrags(-10)
+	else ply:SendLua("notification.AddLegacy('You cannot afford a Rollermine with less than 10 points.',    NOTIFY_ERROR   , 5 )")
+	end
 end
 
 function SpawnSniper( pos, ang,owner )
+local ply = ents.GetByIndex(tonumber(owner))
+if ply:Frags() >= 30 then
 	NPC = ents.Create( "npc_sniper" )
 	NPC:SetPos( pos+Vector(0,0,-30) )
 	NPC:SetAngles( ang ) 
 	NPC:Spawn()
-	NPC:SetHealth(10)
+	NPC:SetHealth(40)
+	NPC:SetKeyValue("PaintInterval", 3)
 	NPC:SetNWString("owner",""..owner.."")
 	NPC:SetName("Sniper")
 	NPC:SetNWString("name","Sniper")
@@ -1070,23 +1298,35 @@ function SpawnSniper( pos, ang,owner )
 		NPC:Fire ( "SetRelationship", ""..value.." D_LI 99" )
 		NPC:Fire ( "SetRelationship", "player D_LI 99" )
 	end)	
+	ply:AddFrags(-30)
 
+	else ply:SendLua("notification.AddLegacy('You cannot afford a Sniper with less than 30 points.',    NOTIFY_ERROR   , 5 )")
+	end
 end
 
 function SpawnCeilingTurretStrong( pos, ang,owner )
+local ply = ents.GetByIndex(tonumber(owner))
+if ply:Frags() >= 30 then
 	NPC = ents.Create( "npc_turret_ceiling" )
 	NPC:SetPos( pos )
 	NPC:SetAngles( ang ) 
 	NPC:SetKeyValue( "spawnflags", "32" )
+	NPC:SetCurrentWeaponProficiency( WEAPON_PROFICIENCY_PERFECT )
 	NPC:Spawn()
-	NPC:SetHealth(2)
+	NPC:SetHealth(50)
 	NPC:SetNWString("owner",""..owner.."")
 	NPC:SetName("Camera")
 	NPC:SetNWString("name","Camera")
+	ply:AddFrags(-30)
+
+	else ply:SendLua("notification.AddLegacy('You cannot afford a Combine Camera with less than 30 points.',    NOTIFY_ERROR   , 5 )")
+	end
 end
 
 
 function SpawnTurret( pos, ang, owner )
+local ply = ents.GetByIndex(tonumber(owner))
+if ply:Frags() >= 10 then
 	NPC = ents.Create( "npc_turret_floor" )
 	NPC:SetPos( pos )
 	NPC:SetAngles( ang ) 
@@ -1094,24 +1334,33 @@ function SpawnTurret( pos, ang, owner )
 	NPC:SetName("Turret")
 	NPC:SetNWString("owner",""..owner.."")
 	NPC:SetNWString("name","Turret")
-
+	ply:AddFrags(-10)
+	else ply:SendLua("notification.AddLegacy('You cannot afford a Turret with less than 10 points.',    NOTIFY_ERROR   , 5 )")
+	end
 end
 
 function SpawnMetropolice( pos, owner )
+local ply = ents.GetByIndex(tonumber(owner))
+if ply:Frags() >= 10 then
 	NPC = ents.Create( "npc_metropolice" )
+
+	targetTrace = util.QuickTrace( pos, Vector(0,0,900), NPC)
+	NPC:SetKeyValue( "waitingtorappel", 1 )
 	NPC:SetKeyValue("Manhacks", 1) 
-	NPC:SetKeyValue( "model", ""..GetConVarString("css_metrocop_model").."" )
-	NPC:SetPos( pos )
+	NPC:SetKeyValue( "model", ""..GetConVarString("squad_survival_metrocop_model").."" )
+	NPC:SetPos( targetTrace.HitPos-Vector(0,0,130) )
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
 	NPC:SetKeyValue( "spawnflags", 512 )
 	NPC:SetKeyValue("squadname", "Combine")
-	if GetConVarNumber("css_use_NPC_PACK_weapons") == 1 then
+	if GetConVarNumber("squad_survival_use_NPC_PACK_weapons") == 1 then
 		NPC:Give(""..table.Random(NPC_WEAPON_PACK_2_RAPID_FIRE).."")
 	else
 	NPC:Give("ai_weapon_smg1")
 	end
 	NPC:SetName("Metrocop")
 	NPC:Spawn()
+	NPC:Fire("BeginRappel","",0)
+
 	NPC:SetNWString("owner",""..owner.."")
 	NPC:SetNWString("selected","0")
 	NPC:SetNWVector("HoldPosition","NO_VECTOR")
@@ -1122,9 +1371,11 @@ function SpawnMetropolice( pos, owner )
 	NPC:SetHealth("60")
 	NPC:SetCurrentWeaponProficiency( WEAPON_PROFICIENCY_PERFECT )
 	NPC:EmitSound("items/ammo_pickup.wav",75,100)
+	ply:AddFrags(-10)
 
+	else ply:SendLua("notification.AddLegacy('You cannot afford a Metrocop with less than 10 points.',    NOTIFY_ERROR   , 5 )")
+	end
 end
-
 
 function SpawnCombineSRappel( pos,owner )
 	NPC = ents.Create( "npc_combine_s" )
@@ -1133,7 +1384,7 @@ function SpawnCombineSRappel( pos,owner )
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
 	NPC:SetKeyValue( "waitingtorappel", 1 )
 	NPC:SetKeyValue( "spawnflags", 512 )
-	if GetConVarNumber("css_use_NPC_PACK_weapons") == 1 then
+	if GetConVarNumber("squad_survival_use_NPC_PACK_weapons") == 1 then
 		NPC:Give(""..table.Random(NPC_WEAPON_PACK_2_RAPID_FIRE).."")
 	else
 	NPC:Give("ai_weapon_ar2")
@@ -1156,14 +1407,21 @@ function SpawnCombineSRappel( pos,owner )
 end
 
 function SpawnCombineS( pos,owner )
+local ply = ents.GetByIndex(tonumber(owner))
+if ply:Frags() >= 10 then
+
 	NPC = ents.Create( "npc_combine_s" )
+	targetTrace = util.QuickTrace( pos, Vector(0,0,900), NPC)
+	NPC:SetKeyValue( "waitingtorappel", 1 )
 	NPC:SetKeyValue("NumGrenades", "2") 
-	NPC:SetPos( pos )
-	NPC:SetKeyValue( "model",""..GetConVarString("css_soldier_model").."")
+	NPC:SetPos( targetTrace.HitPos-Vector(0,0,130) )
+	NPC:SetKeyValue( "model",""..GetConVarString("squad_survival_soldier_model").."")
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
 	NPC:SetKeyValue( "spawnflags", 512 )
 	NPC:Spawn()
-	if GetConVarNumber("css_use_NPC_PACK_weapons") == 1 then
+	NPC:Fire("BeginRappel","",0)
+
+	if GetConVarNumber("squad_survival_use_NPC_PACK_weapons") == 1 then
 		NPC:Give(""..table.Random(NPC_WEAPON_PACK_2_RAPID_FIRE).."")
 	else
 	NPC:Give("ai_weapon_ar2")
@@ -1179,24 +1437,33 @@ function SpawnCombineS( pos,owner )
 	NPC:SetNWString("name","Soldier")
 	NPC:SetHealth("100")
 	NPC:EmitSound("items/ammo_pickup.wav",75,100)
-
+	ply:AddFrags(-10)
+	else ply:SendLua("notification.AddLegacy('You cannot afford a Soldier with less than 10 points.',    NOTIFY_ERROR   , 5 )")
+	end
 	--NPC:Fire("StartPatrolling","",0)
 end
 
 function SpawnCombineShotgunner ( pos,owner )
+local ply = ents.GetByIndex(tonumber(owner))
+if ply:Frags() >= 10 then
+	targetTrace = util.QuickTrace( pos, Vector(0,0,900), NPC)
 	NPC = ents.Create( "npc_combine_s" )
+	NPC:SetKeyValue( "waitingtorappel", 1 )
+
 	NPC:SetKeyValue("NumGrenades", "5") 
-	NPC:SetPos( pos )
-	if GetConVarString("css_shotgunner_model") == "models/Combine_Soldier.mdl" then
+	NPC:SetPos( targetTrace.HitPos-Vector(0,0,130) )
+	if GetConVarString("squad_survival_shotgunner_model") == "models/Combine_Soldier.mdl" then
 	NPC:SetSkin(1)
 	else
-	NPC:SetKeyValue( "model",""..GetConVarString("css_shotgunner_model").."")
+	NPC:SetKeyValue( "model",""..GetConVarString("squad_survival_shotgunner_model").."")
 	end
 
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
 	NPC:SetKeyValue( "spawnflags", 512 )
 	NPC:Spawn()
-	if GetConVarNumber("css_use_NPC_PACK_weapons") == 1 then
+	NPC:Fire("BeginRappel","",0)
+
+	if GetConVarNumber("squad_survival_use_NPC_PACK_weapons") == 1 then
 		NPC:Give(""..table.Random(NPC_WEAPON_PACK_2_SHOTGUNS).."")
 	else
 	NPC:Give("ai_weapon_shotgun")	
@@ -1212,8 +1479,12 @@ function SpawnCombineShotgunner ( pos,owner )
 	NPC:SetNWString("name","Shotgunner")
 	NPC:SetHealth("100")
 	NPC:EmitSound("items/ammo_pickup.wav",75,100)
-
+	--NPC:SetCustomCollisionCheck(true)
 	--NPC:Fire("StartPatrolling","",0)
+		ply:AddFrags(-15)
+
+	else ply:SendLua("notification.AddLegacy('You cannot afford a Shotgunner with less than 15 points.',    NOTIFY_ERROR   , 5 )")
+	end
 end
 
 concommand.Add("rpg_fire",function() 
@@ -1226,14 +1497,21 @@ concommand.Add("rpg_fire",function()
 end)
 
 function SpawnCombineElite( pos,owner )
+local ply = ents.GetByIndex(tonumber(owner))
+if ply:Frags() >= 20 then
+
 	NPC = ents.Create( "npc_combine_s" )
+	targetTrace = util.QuickTrace( pos, Vector(0,0,900), NPC)
+	NPC:SetKeyValue( "waitingtorappel", 1 )
 	NPC:SetKeyValue("NumGrenades", "1") 
-	NPC:SetKeyValue( "model",""..GetConVarString("css_elite_model").."")
-	NPC:SetPos( pos )
+	NPC:SetKeyValue( "model",""..GetConVarString("squad_survival_elite_model").."")
+	NPC:SetPos( targetTrace.HitPos-Vector(0,0,130) )
 	NPC:SetKeyValue( "spawnflags", 768 )
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
 	NPC:Spawn()
-	if GetConVarNumber("css_use_NPC_PACK_weapons") == 1 then
+	NPC:Fire("BeginRappel","",0)
+
+	if GetConVarNumber("squad_survival_use_NPC_PACK_weapons") == 1 then
 		NPC:Give(""..table.Random(NPC_WEAPON_PACK_2_RAPID_FIRE).."")
 	else
 	NPC:Give( "ai_weapon_ar2" )
@@ -1249,7 +1527,10 @@ function SpawnCombineElite( pos,owner )
 	NPC:SetNWString("name","Elite Soldier")
 	NPC:SetHealth("140")
 	NPC:EmitSound("items/ammo_pickup.wav",75,100)
+	ply:AddFrags(-20)
 
+	else ply:SendLua("notification.AddLegacy('You cannot afford a Elite Soldier with less than 20 points.',    NOTIFY_ERROR   , 5 )")
+	end
 end
 function SpawnBasicNPC( pos,npc )
 	NPC = ents.Create( ""..npc.."" )
@@ -1262,6 +1543,9 @@ end
 
 
 function SpawnHunter( pos,owner )
+local ply = ents.GetByIndex(tonumber(owner))
+if ply:Frags() >= 50 then
+
 	NPC = ents.Create( "npc_hunter" )
 	NPC:SetPos( pos )
 	NPC:SetKeyValue( "spawnflags", 512+256 )
@@ -1278,18 +1562,27 @@ function SpawnHunter( pos,owner )
 	NPC:SetName("Hunter")
 	NPC:SetHealth("300")
 	NPC:AddRelationship( "npc_antlion D_HT 20" )
+	ply:AddFrags(-50)
 
+	else ply:SendLua("notification.AddLegacy('You cannot afford a Hunter with less than 50 points.',    NOTIFY_ERROR   , 5 )")
+	end
 end
 
 function SpawnCombinePrisonGuard( pos,owner )
+local ply = ents.GetByIndex(tonumber(owner))
+if ply:Frags() >= 15 then
 	NPC = ents.Create( "npc_combine_s" )
+	targetTrace = util.QuickTrace( pos, Vector(0,0,900), NPC)
+	NPC:SetKeyValue( "waitingtorappel", 1 )
 	NPC:SetKeyValue("NumGrenades", "1") 
-	NPC:SetKeyValue( "model",""..GetConVarString("css_guard_model").."")
-	NPC:SetPos( pos )
+	NPC:SetKeyValue( "model",""..GetConVarString("squad_survival_guard_model").."")
+	NPC:SetPos( targetTrace.HitPos-Vector(0,0,130) )
 	NPC:SetKeyValue( "spawnflags", 512+256 )
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
 	NPC:Spawn()
-	if GetConVarNumber("css_use_NPC_PACK_weapons") == 1 then
+	NPC:Fire("BeginRappel","",0)
+
+	if GetConVarNumber("squad_survival_use_NPC_PACK_weapons") == 1 then
 		NPC:Give(""..table.Random(NPC_WEAPON_PACK_2_RPGS).."")
 	else
 	NPC:Give( "ai_weapon_crossbow" )
@@ -1305,10 +1598,25 @@ function SpawnCombinePrisonGuard( pos,owner )
 	NPC:SetName("Guard")
 	NPC:SetHealth("100")
 	NPC:EmitSound("items/ammo_pickup.wav",75,100)
+	ply:AddFrags(-15)
 
+	else ply:SendLua("notification.AddLegacy('You cannot afford a Guard with less than 15 points.',    NOTIFY_ERROR   , 5 )")
+	end
 end
 
 
+function SpawnCombineMine(pos,owner)
+local ply = ents.GetByIndex(tonumber(owner))
+if ply:Frags() >= 5 then
+	NPC = ents.Create( "combine_hoppermine" )
+	NPC:SetNWString("owner",""..owner.."")
+	NPC:SetPos( pos )
+	NPC:Spawn()
+	ply:AddFrags(-5)
+
+	else ply:SendLua("notification.AddLegacy('You cannot afford a Mine with less than 5 points.',    NOTIFY_ERROR   , 5 )")
+	end
+end
 function SpawnRebel(pos)
 	NPC = ents.Create( "npc_citizen" )
 	NPC:SetPos( pos )
@@ -1318,7 +1626,7 @@ function SpawnRebel(pos)
 	NPC:SetKeyValue("spawnflags", 8+256+512)
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
 	NPC:Spawn()
-	if GetConVarNumber("css_use_NPC_PACK_weapons") == 1 then
+	if GetConVarNumber("squad_survival_use_NPC_PACK_weapons") == 1 then
 	NPC:Give(""..table.Random(NPC_WEAPON_PACK_2_ALL).."")
 	else
 	NPC:Give(table.Random(REBEL_WEAPONS))
@@ -1399,9 +1707,22 @@ configfound=0
 end
 
 function GM:EntityTakeDamage(damaged,damage)
---if damaged:Health() < 1 and damaged:IsNPC() then damaged:Remove() end
-damage:ScaleDamage(GetConVarNumber("css_damage_multiplier"))
+if damaged:Health() < 0 and damaged:IsNPC() then damaged:Remove() end
+damage:ScaleDamage(GetConVarNumber("squad_survival_damage_multiplier"))
 
+
+if damaged:IsPlayer() and damage:GetAttacker():IsPlayer() and damaged != damage:GetAttacker() then
+
+/*
+if damaged:GetClass("npc_combine_s") and damage:GetAttacker():GetNWString("side") == "combine" then damage:ScaleDamage(0) end
+
+
+if damaged:GetNWString("side") == "combine" and damage:GetAttacker():GetClass() == "npc_combine_s" then damage:ScaleDamage(0) end
+
+
+if damaged:GetNWString("side") == "combine" and damage:GetAttacker():GetNWString("side") == "combine" and damaged:GetName() != damage:GetAttacker():GetName() then damage:ScaleDamage(0) end
+*/
+end
 
 if table.HasValue(AllCombineEntities, damaged:GetClass()) then 
 
@@ -1430,12 +1751,14 @@ function GM:Initialize()
 	RunConsoleCommand( "ai_norebuildgraph", "1")   
 end
 
+/*
 function MapSetup()
 
 print("Map Setup loaded.")
 end
-
+*/
 function GM:ShouldCollide(ent1,ent2)
+--print("lel")
 local owner
 if ent1:GetClass() == "npc_combine_s" or ent1:GetNWString("name") == "TheDocument" then 	
 		if ent2:GetClass() == "npc_combine_s" or ent2:GetNWString("name") == "TheDocument" then
@@ -1452,6 +1775,23 @@ if ent1:GetClass() == "npc_combine_s" or ent1:GetNWString("name") == "TheDocumen
 		end
 	end
 end
+
+/*
+if ent1:GetClass() == "npc_combine_s" and ent2:GetClass() == "item_healthkit" and ent1:GetPos():Distance(ent2:GetPos()) < 100 then
+if ent1:Health() < 50 then
+ent1:SetHealth(100) 
+ent2:Remove()
+end
+end
+
+if ent1:GetClass() == "item_healthkit" and ent2:GetClass() == "npc_combine_s" and ent1:GetPos():Distance(ent2:GetPos()) < 100 then
+if ent2:Health() < 50 then
+ent2:SetHealth(100) 
+ent1:Remove()
+end
+end
+*/	
+
 	return true
 end
 	
@@ -1472,14 +1812,22 @@ NPCstospawn=0
 WaveNumber=0
 WaveSpawnReference=0
 started=0
-gamemodetime = CurTime()+10
+fiveseccycletime = CurTime()+10
+shortcycletime = CurTime()+10
 CanTalk=1
 canistersavailable=1
-if MapSetup() then MapSetup() end
+ 
+ RunConsoleCommand( "g_helicopter_chargetime", "2") 
+RunConsoleCommand( "sk_helicopter_burstcount", "20") 
+RunConsoleCommand( "sk_helicopter_firingcone", "3") 
+RunConsoleCommand( "sk_helicopter_roundsperburst", "5") 
+ MapSetup()
+
 end
 
 function GM:OnNPCKilled(victim, killer, weapon)
 if victim:GetClass() == "npc_turret_floor" then return true end
+if victim:GetClass() == "npc_manhack" or killer:GetClass() == "npc_manhack" then return true end
 		if killer:IsPlayer() or killer:IsNPC() then
 			net.Start( "PlayerKillNotice" )
 			net.WriteString( ""..killer:GetName().."" )
@@ -1495,15 +1843,25 @@ if victim:GetClass() == "npc_turret_floor" then return true end
  
 
   if table.HasValue(AllCombineEntities, victim:GetClass())
- then 
-  if victim:GetNWString("owner") != "none" then
-	local owner = ents.GetByIndex(tonumber(victim:GetNWString("owner")))
-  owner:PrintMessage(HUD_PRINTTALK, ""..victim:GetNWString("name").." has died!")
-  owner:SetFrags(owner:Frags()-10)
+ then 	
+  if victim:GetNWString("owner") then
+  local owner = ents.GetByIndex(tonumber(victim:GetNWString("owner")))
+  if owner:GetNWString("side") == "combine" then
+	owner:SendLua("notification.AddLegacy('"..victim:GetNWString("name").." has died!',   NOTIFY_HINT  , 6 )")
 	owner:EmitSound(table.Random(CombineChat_Dead), 75, 100)
 	CountPlayerCombineNumber(owner:EntIndex(),"squad1")
 	CountPlayerCombineNumber(owner:EntIndex(),"squad2")
 	owner:SendLua("totalcombinenumber="..CountPlayerCombine(owner:EntIndex()).."")
+end
+	if killer:IsPlayer() and killer:GetNWString("side") == "combine" and killer:EntIndex() != owner:EntIndex() then
+	if killer.teamkiller != 1 then 
+	killer.teamkiller=1
+	killer:SendLua("notification.AddLegacy('This is a cooperative game! Dont kill your teammates.',    NOTIFY_ERROR   , 10 )")
+	else
+	killer:Kick("Do not kill your teammates next time")
+	end
+	end
+	
  end
 
  end
@@ -1528,22 +1886,45 @@ if table.HasValue(AllCombineEntities, killer:GetClass())
 	timer.Simple(4, function()  canplay=1 end)
 	end
  
- if killer:GetNWString("owner") != "none" 
- then
+ if killer:GetNWString("owner") then
 	local owner = ents.GetByIndex(tonumber(killer:GetNWString("owner")))
 	owner:AddFrags(1) 
-
  end
  end
  
  
  if table.HasValue(Zombies, victim:GetClass()) and math.random(1,4) == 1 then
- 
- 	SpawnItem(table.Random(ZombiesDrop), victim:GetPos(), Angle(0,0,0))
-
- 
+ --SpawnItem(table.Random(ZombiesDrop), victim:GetPos(), Angle(0,0,0))
  end
+ 
+if killer:IsPlayer() and !table.HasValue(AllCombineEntities, victim:GetClass()) then killer:AddFrags(1) end
+if killer:GetNWString("side") == "rebel" then
+killer:AddFrags(1)
 end
+
+/*
+for k, v in pairs(player.GetAll()) do
+v:SetNWFloat("enemiesleft", CountEnemies())
+	if CountEnemies() == 1 and v:GetNWFloat("enemycount") != 1 then
+		v:SendLua("notification.AddProgress( 'EnemiesCount', 'Enemies remaining: "..v:GetNWFloat("enemiesleft").."' )")
+	v:SetNWFloat("enemycount", 1)
+	end
+	if CountEnemies() < 1 then
+	v:SendLua("notification.Kill( 'EnemiesCount' )")
+	v:SetNWFloat("enemycount", 0) end
+end
+*/
+end
+
+function testcolor ()
+	for k, v in pairs(player.GetByID(1):GetWeapons() ) do
+	v:SetRenderMode( RENDERMODE_TRANSALPHA )
+	v:SetColor(Color(255,255,255,50))
+	end
+player.GetByID(1):SetRenderMode( RENDERMODE_TRANSALPHA )
+player.GetByID(1):SetColor(  Color(255,255,255,50))
+end
+
 
 function SpawnItem (weapon, pos, ang)
 	ITEM = ents.Create(weapon)
@@ -1552,40 +1933,32 @@ function SpawnItem (weapon, pos, ang)
 	ITEM:Spawn()
 end
 function FirstSpawn(ply)
-ply:PrintMessage(HUD_PRINTTALK, "Welcome.")
-ply:PrintMessage(HUD_PRINTTALK, "There are three minimodes to play for now.")
-
-timer.Simple(15, function() 
-ply:PrintMessage(HUD_PRINTTALK, "Say !zombies or !antlions to spawn the respective wave.")
-ply:PrintMessage(HUD_PRINTTALK, "Each wave will have more monsters.")
+timer.Simple(10, function() ply:SendLua("notification.AddLegacy('Spawn your soldiers using the Q menu. Select them with E while alive, Left Click while dead.',   NOTIFY_HINT  , 10 )")
  end)
-
- timer.Simple(30, function()
-ply:PrintMessage(HUD_PRINTTALK, "Say !document to play Find The Document minimode.")
-ply:PrintMessage(HUD_PRINTTALK, "A paperclip will appear somewhere in the map. You have to find it.")
-ply:PrintMessage(HUD_PRINTTALK, "Zombies will spawn untill you find the document.")
+timer.Simple(20, function() ply:SendLua("notification.AddLegacy('Every enemy your Squad kills, its a point for you. These points are used to buy units.',   NOTIFY_HINT  , 10 )")
+ end)
+timer.Simple(30, function() ply:SendLua("notification.AddLegacy('say !hordes, !antlions, !zombies, !document or !hunted to start a minimode.',   NOTIFY_HINT  , 10 )")
+ end)
+timer.Simple(40, function() ply:SendLua("notification.AddLegacy('Check TAB, that 50 are your points.',   NOTIFY_HINT  , 10 )")
 end)
-
- timer.Simple(45, function()
-ply:PrintMessage(HUD_PRINTTALK, "Say !hordes and the gamemode will spawn different waves of enemies,")
-ply:PrintMessage(HUD_PRINTTALK, "with a small pause between them.")
-ply:PrintMessage(HUD_PRINTTALK, "Each wave will have more monsters. Say !stop to stop it.")
+timer.Simple(50, function() ply:SendLua("notification.AddLegacy('say !help and these messages will appear again.',   NOTIFY_HINT  , 10 )")
 end)
-timer.Simple(60, function()
-ply:PrintMessage(HUD_PRINTTALK, "You cannot spawn combine while inside the Find The Document or Hordes minimodes.")
-end)
-
+ply:SetNWFloat("enemycount", 0)
+ply.huntedready=0
+ply:SetNWString("side", "combine")
+ply:SetFrags(50)
 timer.Simple(3, function() ply:SendLua("CombineBootsRun()")  end)
 ply:SendLua("localownerid="..ply:EntIndex().."")
 end
 hook.Add( "PlayerInitialSpawn", "playerInitialSpawn", FirstSpawn )
 
 function SpawnHeli( pos,owner)
-
+local ply = ents.GetByIndex(tonumber(owner))
+if ply:Frags() >= 200 then
 	NPC = ents.Create( "npc_helicopter" )
 	NPC:SetKeyValue( "ignoreunseenenemies", 1 )
 	NPC:SetKeyValue( "spawnflags", 262144 )
-	NPC:SetPos( pos+Vector(0,0,100) )
+	NPC:SetPos( pos+Vector(0,0,130) )
 	NPC:Spawn()
 	NPC:Activate()
 	NPC:Fire("activate","",0)
@@ -1599,15 +1972,18 @@ function SpawnHeli( pos,owner)
 	NPC:SetNWString("Squad", "no")
 	NPC:SetKeyValue("squadname", "")
 	NPC:SetNWString("name","Helicopter")
-	NPC:SetHealth("100")
-
+	NPC:SetHealth("300")
+	ply:AddFrags(-200)
+	else ply:SendLua("notification.AddLegacy('You cannot afford an Helicopter with less than 200 points.',    NOTIFY_ERROR   , 5 )")
+	end
 end
 function SpawnGunship( pos,owner)
-
+local ply = ents.GetByIndex(tonumber(owner))
+if ply:Frags() >= 250 then
 	NPC = ents.Create( "npc_combinegunship" )
 	NPC:SetKeyValue( "ignoreunseenenemies", 1 )
 	NPC:SetKeyValue( "spawnflags", 262144 )
-	NPC:SetPos( pos+Vector(0,0,100) )
+	NPC:SetPos( pos+Vector(0,0,130) )
 	NPC:Spawn()
 	NPC:Activate()
 	NPC:Fire("activate","",0)
@@ -1621,28 +1997,26 @@ function SpawnGunship( pos,owner)
 	NPC:SetNWString("Squad", "no")
 	NPC:SetKeyValue("squadname", "")
 	NPC:SetNWString("name","Gunship")
-	NPC:SetHealth("100")
-
+	NPC:SetHealth("300")
+	ply:AddFrags(-250)
+	else ply:SendLua("notification.AddLegacy('You cannot afford a Gunship with less than 250 points.',    NOTIFY_ERROR   , 5 )")
+	end
 end
 
 function SpawnDropship( pos,owner)
-
+local ply = ents.GetByIndex(tonumber(owner))
+if ply:Frags() >= 100 then
 	NPC = ents.Create( "npc_combinedropship" )
 	NPC:SetKeyValue( "CrateType", 1 )
 	NPC:SetCollisionGroup(3)
-
 	NPC:SetKeyValue( "GunRange", 2048 )
-
     NPC:SetCustomCollisionCheck(true)
-
 	NPC:SetKeyValue( "ignoreunseenenemies", 0 )
-
 	--NPC:SetKeyValue( "spawnflags", 262144 )
-	NPC:SetPos( pos+Vector(0,0,100) )
+	NPC:SetPos( pos+Vector(0,0,130) )
 	NPC:Spawn()
 	NPC:Activate()
 	NPC:Fire("activate","",0)
-	--NPC:SetCollisionGroup(1)
 	NPC:SetName("Dropship")
 	NPC:SetNWString("owner",""..owner.."")
 	NPC:SetNWString("selected","0")
@@ -1652,14 +2026,42 @@ function SpawnDropship( pos,owner)
 	NPC:SetKeyValue("squadname", "")
 	NPC:SetNWString("name","Dropship")
 	NPC:SetHealth("200")
-
+	ply:AddFrags(-100)
+	else ply:SendLua("notification.AddLegacy('You cannot afford a Dropship with less than 100 points.',    NOTIFY_ERROR   , 5 )")
+	end
 end
 
 
 
+function SpawnAPC( pos, ang )
+	spawnairboat = ents.Create("prop_vehicle_apc")
+	spawnairboat:SetModel("models/combine_apc.mdl")
+	spawnairboat:SetKeyValue("vehiclescript", "scripts/vehicles/apc_npc.txt")
+	spawnairboat:SetPos( pos )
+	spawnairboat:SetAngles( ang ) 
+	spawnairboat:Spawn()
+	spawnairboat:Activate()
+	
+end
 
-
-
+function CreatePathCorner()
+	creating = ents.Create( "path_corner" )
+	creating:SetPos(player.GetByID(1):GetEyeTraceNoCursor().HitPos)
+	creating:SetName("pepe2")
+	creating:Spawn()
+end
+			
+function MoveAPC()
+spawnairboat = ents.Create("npc_apcdriver")
+spawnairboat:SetKeyValue("vehicle", "Combine_APC")
+spawnairboat:SetPos( player.GetByID(1):GetPos())
+spawnairboat:Spawn()
+spawnairboat:Activate()
+timer.Simple(5, function()
+print("done!")
+spawnairboat:Fire("GotoPathCorner",""..tostring(player.GetByID(1):GetName()).."",0)  
+end)
+end
 --
 function SpawnCanister( pos )
 
@@ -1690,6 +2092,72 @@ function SpawnCanister( pos )
 	end
 end
 
+
+function MortarCheck()
+local targets = {}
+	table.foreach(ents.GetAll(), function(key,ent)
+		if (!table.HasValue(AllCombineEntities, ent:GetClass()) and ent:IsNPC()) or (ent:IsPlayer() and ent:GetNWString("side") == "rebel") then if (ent:OnGround() and ent:Health() > 50) then
+			table.insert(targets,ent)
+		end end
+	end)
+	if table.Count(targets) > 0 then
+		return table.Random(targets)	
+		else return false
+	end
+
+end
+
+
+function LaunchMortarRound()
+
+		local ply = MortarCheck()
+	if ply != false then
+		
+		local targetTrace = util.QuickTrace( ply:GetShootPos(), ply:GetUp(), ply )		
+		if ( targetTrace.HitSky ) then print("unavailable") return end
+
+		local traceRes = util.QuickTrace(ply:GetPos()+ply:GetVelocity(), Vector(0,0,2000), ply)
+		if traceRes.Entity == NULL or traceRes.HitSky then 
+
+		local mortar = ents.Create( "func_tankmortar" )	
+			mortar:SetPos( traceRes.HitPos)
+			mortar:SetAngles( Angle( 90, 0, 0 ) )
+			mortar:SetKeyValue( "iMagnitude", 90000) // Damage.
+			mortar:SetKeyValue( "firedelay", "2" ) // Time before hitting.
+			mortar:SetKeyValue( "warningtime", "1" ) // Time to play incoming sound before hitting.
+			mortar:SetKeyValue( "incomingsound", "Weapon_Mortar.Incomming" ) // Incoming sound.
+			mortar:Spawn()
+		
+		local target = ents.Create( "info_target" )
+			target:SetPos( targetTrace.HitPos )
+			target:SetName( tostring( target ) )
+		target:Spawn()
+		mortar:DeleteOnRemove( target )
+	
+		mortar:Fire( "SetTargetEntity", target:GetName(), 0 )
+		mortar:Fire( "Activate", "", 0 )
+		mortar:Fire( "FireAtWill", "", 0 )
+		mortar:Fire( "Deactivate", "", 2 )
+		mortar:Fire( "kill", "", 1 )
+		else  print("unavailable")
+
+end
+		else  print("Not enough people")
+
+end
+end
+
+
+
+
+
+
+function SpawnItem (weapon, pos, ang)
+	ITEM = ents.Create(weapon)
+	ITEM:SetPos( pos )
+	ITEM:SetAngles( ang )
+	ITEM:Spawn()
+end
 function SpawnProp( pos, ang, model )
 	ITEM = ents.Create("prop_physics" )
 	ITEM:SetPos( pos )
@@ -1702,10 +2170,11 @@ function SpawnDocument( pos, ang, model )
 	ITEM:SetPos( pos )
 	ITEM:SetAngles(ang)
 	ITEM:SetModel(model)
+	ITEM:SetCollisionGroup( COLLISION_GROUP_NONE )
 	ITEM:SetNWString("name","TheDocument")
-    ITEM:SetCustomCollisionCheck(true)
-
 	ITEM:Spawn()
+   -- ITEM:SetCustomCollisionCheck(true)
+
 end
 function SpawnStaticProp( pos, ang, model )
 	ITEM = ents.Create("prop_physics" )
@@ -1717,8 +2186,31 @@ function SpawnStaticProp( pos, ang, model )
 end
 
 
-function GM:AllowPlayerPickup(ply,ent) 
+function PropBreak(breaker,prop)
+	if prop:IsValid() and breaker:IsPlayer() then
+		if prop:GetModel() == "models/props_junk/wood_crate002a.mdl"
+		or prop:GetModel() == "models/props_junk/wood_crate001a_damaged.mdl" 
+		or prop:GetModel() == "models/props_junk/wood_crate001a_damagedmax.mdl" 
+		or prop:GetModel() == "models/props_junk/wood_crate001a_damagedmax.mdl" 
+		or prop:GetModel() == "models/props_junk/wood_crate001a.mdl" 
+		or prop:GetModel() == "models/props_junk/cardboard_box003a.mdl"
+		or prop:GetModel() == "models/props_junk/cardboard_box002a.mdl"
+		or prop:GetModel() == "models/props_junk/cardboard_box004a.mdl"
+		or prop:GetModel() == "models/props_c17/woodbarrel001.mdl"
+		then
+				for k, v in pairs(breaker:GetWeapons()) do
+					SpawnItem(v:GetClass(),prop:GetPos(),Angle(0,0,0))
+				end
+				if breaker:Health() < 75 then SpawnItem("item_healthkit",prop:GetPos(),Angle(0,0,0)) end
+		end
+end
 
+end
+hook.Add("PropBreak","OnPropBreak",PropBreak)
+
+
+function GM:AllowPlayerPickup(ply,ent) 
+if ply.huntedready == 1 or ply:GetNWString("side")  == "rebel" then return false end
 if ent:GetNWString("name") == "TheDocument" then
 ent:Remove()
 local player = ply
@@ -1727,7 +2219,6 @@ end
 return true
 end
 function FindTheDocumentsWin(ply)
-
 
 PrintMessage(HUD_PRINTTALK, "[Overwatch]: "..ply:GetName().." has found the document.") 
 ply:AddFrags(50)
@@ -1749,7 +2240,7 @@ end
 
 	for k, v in pairs(ents.GetAll()) do
 		if table.HasValue(FindTheDocuments_Models, v:GetModel()) then
-			table.insert(FindTheDocuments_Table, v:GetPos()+Vector(0,0,50))
+			table.insert(FindTheDocuments_Table, v:GetPos()+Vector(0,0,20))
 			print(v:GetModel())
 		end
 	end

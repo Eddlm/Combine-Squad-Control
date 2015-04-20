@@ -9,7 +9,7 @@
 	{
 		1
 		{
-			"name"		"css_damage_multiplier"
+			"name"		"squad_survival_damage_multiplier"
 			"text"		"Damage Multiplier"
 			"help"		""
 			"type"		"Numeric"
@@ -17,15 +17,15 @@
 		}
 		2
 		{
-			"name"		"css_max_combine_per_player"
+			"name"		"squad_survival_max_combine_per_player"
 			"text"		"Combine per player limit"
 			"help"		""
 			"type"		"Numeric"
-			"default"	"6"
+			"default"	"25"
 		}
 		3
 		{
-			"name"		"css_use_NPC_PACK_weapons"
+			"name"		"squad_survival_use_NPC_PACK_weapons"
 			"text"		"Use NPC Weapon Pack 2"
 			"help"		""
 			"type"		"CheckBox"
@@ -33,7 +33,7 @@
 		}
 		4
 		{
-			"name"		"css_extra_beta_npcs"
+			"name"		"squad_survival_extra_beta_npcs"
 			"text"		"Use HL2 Beta SNPCs"
 			"help"		""
 			"type"		"CheckBox"
@@ -41,15 +41,15 @@
 		}
 		5
 		{
-			"name"		"css_hold_position_tolerance"
+			"name"		"squad_survival_hold_position_tolerance"
 			"text"		"Hold Position Tolerance"
 			"help"		""
 			"type"		"Numeric"
-			"default"	"300"
+			"default"	"200"
 		}
 		6
 		{
-			"name"		"css_combine_nocollide"
+			"name"		"squad_survival_combine_nocollide"
 			"text"		"Disable combine collisions"
 			"help"		""
 			"type"		"CheckBox"
@@ -57,23 +57,23 @@
 		}
 		7
 		{
-			"name"		"css_orders_key"
+			"name"		"squad_survival_orders_key"
 			"text"		"Orders Key"
 			"help"		""
-			"type"		"Text"
+			"type"		"Numeric"
 			"default"	"KEY_Q"
 		}
 		8
 		{
-			"name"		"css_highlight_key"
+			"name"		"squad_survival_highlight_key"
 			"text"		"Highlight Units key"
 			"help"		""
-			"type"		"Text"
+			"type"		"Numeric"
 			"default"	"KEY_X"
 		}
 		9
 		{
-			"name"		"css_hlrenaissance"
+			"name"		"squad_survival_hlrenaissance"
 			"text"		"HL Renaissance NPCs"
 			"help"		""
 			"type"		"CheckBox"
@@ -81,7 +81,7 @@
 		}
 		10
 		{
-			"name"		"css_think_cycle"
+			"name"		"squad_survival_think_cycle"
 			"text"		"Think cycle time"
 			"help"		""
 			"type"		"Numeric"
@@ -89,7 +89,7 @@
 		}
 		11
 		{
-			"name"		"css_player_loadout"
+			"name"		"squad_survival_player_loadout"
 			"text"		"Player loadout"
 			"help"		""
 			"type"		"Text"
@@ -97,7 +97,7 @@
 		}
 		12
 		{
-			"name"		"css_elite_model"
+			"name"		"squad_survival_elite_model"
 			"text"		"Combine Elite model"
 			"help"		""
 			"type"		"Text"
@@ -105,7 +105,7 @@
 		}
 		13
 		{
-			"name"		"css_soldier_model"
+			"name"		"squad_survival_soldier_model"
 			"text"		"Combine Soldier model"
 			"help"		""
 			"type"		"Text"
@@ -113,7 +113,7 @@
 		}
 		14
 		{
-			"name"		"css_shotgunner_model"
+			"name"		"squad_survival_shotgunner_model"
 			"text"		"Combine Shotgunner model"
 			"help"		""
 			"type"		"Text"
@@ -121,7 +121,7 @@
 		}
 		15
 		{
-			"name"		"css_guard_model"
+			"name"		"squad_survival_guard_model"
 			"text"		"Combine Guard model"
 			"help"		""
 			"type"		"Text"
@@ -129,7 +129,7 @@
 		}
 		16
 		{
-			"name"		"css_metrocop_model"
+			"name"		"squad_survival_metrocop_model"
 			"text"		"Metrocop Model"
 			"help"		""
 			"type"		"Text"
