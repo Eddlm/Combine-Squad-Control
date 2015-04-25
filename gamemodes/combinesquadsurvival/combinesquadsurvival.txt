@@ -135,7 +135,22 @@
 			"type"		"Text"
 			"default"	"models/Police.mdl"
 		}
-
+		17
+		{
+			"name"		"squad_survival_starting_score"
+			"text"		"Starting Score"
+			"help"		""
+			"type"		"Numeric"
+			"default"	"50"
+		}
+		18
+		{
+			"name"		"squad_survival_combine_rappel"
+			"text"		"Combine Rappel at spawn"
+			"help"		""
+			"type"		"CheckBox"
+			"default"	"0"
+		}
 	}
 }
 

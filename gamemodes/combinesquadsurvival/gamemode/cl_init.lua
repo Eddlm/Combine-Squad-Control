@@ -9,6 +9,8 @@ LIGHTEXT = 'Visible'
 LIGHTCOLOR = Color(255,0,0)
 lightcol = 0
 playerfrags=0
+pointscolor=Color(255,255,255)
+EnemyCountHUD=0
 net.Receive( "Spotted", function( length, client )
 	HUDTEXT = 'Spotted'
 	HUDCOLOR=Color(255,8,8)
@@ -29,8 +31,14 @@ net.Receive( "Visible", function( length, client )
 	LIGHTCOLOR = Color(255,255,0)
 end )
 
-
-
+function AddPoints()
+pointscolor=Color(0,255,0)
+timer.Simple(1,function() pointscolor=Color(255,255,255) end)
+end
+function DeductPoints()
+pointscolor=Color(255,0,0)
+timer.Simple(1,function() pointscolor=Color(255,255,255) end)
+end
 highlightkey = 2
 orderskey= 2
 localownerid=1
@@ -116,7 +124,10 @@ if !LocalPlayer():Alive() then
 draw.DrawText( "·", "TargetIDsmall", ScrW() * 0.5, ScrH() * 0.49, Color(255,255,255), TEXT_ALIGN_CENTER )
 end
 
-draw.DrawText( "Points: "..playerfrags.."", "TargetIDsmall", ScrW()/2, ScrH()/1.02, Color(255,255,255), TEXT_ALIGN_CENTER )
+draw.DrawText( "Points: "..playerfrags.."", "TargetIDsmall", ScrW()/2, ScrH()/1.02, pointscolor, TEXT_ALIGN_CENTER )
+if EnemyCountHUD > 0 then
+draw.DrawText( "Enemies: "..EnemyCountHUD.."", "TargetIDsmall", ScrW()/2, ScrH()/1.06, Color( 255,255,255 ), TEXT_ALIGN_CENTER )
+end
 
 local color = Color( 0,255,0 )
 if squad1==false then color = Color( 255,0,0 ) else color = Color( 0,255,0 ) end
@@ -270,7 +281,7 @@ if RequestAmmo then RequestAmmo:Remove() end
 
 		RequestAmmo = vgui.Create( "DButton" )
 		RequestAmmo:SetPos( ScrW() * 0.48, ScrH() * 0.20 )
-		RequestAmmo:SetText( "RequestAmmo" )
+		RequestAmmo:SetText( "Ammo Drop (20)" )
 		RequestAmmo:SetSize( 90, 30 )
 		RequestAmmo.DoClick = function()
 			--print( "Button was clicked!" )
@@ -502,7 +513,7 @@ UnselectAll = vgui.Create( "DButton" )
 
 		LaunMortar = vgui.Create( "DButton" )
 		LaunMortar:SetPos( ScrW() * 0.48, ScrH() * 0.28 )
-		LaunMortar:SetText( "Request Mortar" )
+		LaunMortar:SetText( "Mortar (100)" )
 		LaunMortar:SetSize( 90, 30 )
 		LaunMortar.DoClick = function()
 			SpawnOrder("Mortar")
@@ -560,7 +571,7 @@ MenuButtonMachines.DoClick = function ( btn )
     MenuButtonMachinesOptions:AddOption("Turret (10)",function() SpawnOrder("Turret") end ) -- Add options to the menu
     MenuButtonMachinesOptions:AddOption("Ceiling Turret (30)",function() SpawnOrder("CeilingTurret") end )
     MenuButtonMachinesOptions:AddOption("Rollermine (10)",function() SpawnOrder("Rollermine") end )
-    MenuButtonMachinesOptions:AddOption("Mine (5)",function() SpawnOrder("Mine") end )
+    MenuButtonMachinesOptions:AddOption("Mine (2)",function() SpawnOrder("Mine") end )
     MenuButtonMachinesOptions:Open() -- Open the menu AFTER adding your options
 	MenuButtonMachinesOptions:SetPos(MenuButtonMachines:GetPos())
 end

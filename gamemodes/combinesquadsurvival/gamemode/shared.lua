@@ -3,6 +3,7 @@ GM.Author = "Eddlm"
 GM.Email = "eddmalaga@gmail.com"
 GM.Website = "http://facepunch.com/showthread.php?t=1391522"
 
+AmnesiaSNPCs = {"monster_amn_brute","monster_amn_grunt","monster_amn_suitor"}
 
 playermodels = {
 "models/player/group03/male_01.mdl",
@@ -16,7 +17,10 @@ playermodels = {
 "models/player/group03/male_09.mdl",
 }
 
+AmnesiaSNPCs = {"monster_amn_brute","monster_amn_grunt","monster_amn_suitor"}
 
+TF2BotBlue = {"npc_demo_blue","npc_engineer_blue","npc_hwg_blue","npc_medic_blue","npc_pyro_blue","npc_scout_blue","npc_sniper_blue","npc_soldier_blue","npc_spy_blue"}
+TF2BotBlueEnemies = {"npc_demo_blue","npc_engineer_blue","npc_hwg_blue","npc_medic_blue","npc_pyro_blue","npc_scout_blue","npc_sniper_blue","npc_soldier_blue","npc_spy_blue","npc_sentry_blue","tf2_dispenser_blue"}
 CantHideInPlainSight={"npc_zombie","npc_fastzombie","npc_poisonzombie","npc_combine_s","npc_metropolice","npc_helicopter","npc_gunship"}
 HLRenaissance1 = {"monster_alien_controller","monster_alien_grunt","monster_alien_slave",}
 HLRenaissance2 = {"monster_gonome",}
@@ -28,7 +32,7 @@ ZombiesDrop = {"weapon_shotgun","weapon_smg1","weapon_frag","weapon_ar2","item_b
 
 CombineSoldiers = {"npc_combine_s", "npc_metropolice","npc_hunter","npc_fassassin","npc_cremator","npc_rollermine"}
 CombineHelicopters = {"npc_helicopter","npc_combinegunship","npc_combinedropship"}
-AllCombineEntities = {"npc_combine_s", "npc_metropolice","npc_hunter","npc_fassassin","npc_cremator","npc_rollermine","npc_helicopter","npc_combinegunship","npc_manhack","npc_turret_floor","npc_turret_ceiling","npc_combinedropship","npc_sniper","combine_hoppermine"}
+AllCombineEntities = {"npc_combine_s", "npc_metropolice","npc_hunter","npc_fassassin","npc_cremator","npc_rollermine","npc_helicopter","npc_combinegunship","npc_manhack","npc_turret_floor","npc_turret_ceiling","npc_combinedropship","npc_sniper"}
 REBEL_WEAPONS = { "ai_weapon_crossbow","ai_weapon_smg1","ai_weapon_shotgun","ai_weapon_ar2"}
 
 Zombies = {"npc_zombie","npc_fastzombie","npc_poisonzombie","npc_zombine"}
@@ -55,7 +59,7 @@ timer.Simple(24, function() ply:SendLua("notification.AddLegacy('Every enemy you
 end)
 end
 
-    if text == "!deploysoldiers" and CountCombine() < GetConVarNumber("squad_survival_max_combine")+( table.Count(player.GetAll())*2) then
+    if text == "!deploysoldiers" and CountCombine() < GetConVarNumber("squad_survival_max_combine") then
 			for k, v in pairs(ents.FindByClass("npc_combinedropship")) do
 			SpawnCombineSRappel(v:GetPos()+Vector(50,0,-100),ply:EntIndex())
 			SpawnCombineSRappel(v:GetPos()+Vector(-50,0,-100),ply:EntIndex())
@@ -73,11 +77,11 @@ end
 	end
 
 if GetConVarNumber("squad_survival_extra_beta_npcs") == 1 then
-    if text == "!assassin" and CountCombine() < GetConVarNumber("squad_survival_max_combine")+( table.Count(player.GetAll())*2) then
+    if text == "!assassin" and CountCombine() < GetConVarNumber("squad_survival_max_combine") then
 		SpawnCombineAssasin(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
 		return false
 	end
-    if text == "!cremator" and CountCombine() < GetConVarNumber("squad_survival_max_combine")+( table.Count(player.GetAll())*2) then
+    if text == "!cremator" and CountCombine() < GetConVarNumber("squad_survival_max_combine") then
 		SpawnCombineCremator(ply:GetEyeTraceNoCursor().HitPos+Vector(0,0,30),ply:EntIndex())
 		return false
 	end
@@ -171,8 +175,9 @@ end
 				ply:GiveAmmo( 350, "AR2", true )
 				ply:GiveAmmo( 2, "Grenade", true )	
 			end			
+				ply:SetModel("models/player/combine_super_soldier.mdl")
 			UpdateRelationships()
-
+elseif text == "!stophunted" and ply.huntedready != 1 then ply:SendLua("notification.AddLegacy('You can only stop this minimode while in preparation mode!',    NOTIFY_ERROR   , 5 )")
 		end
 
 	    if text == "!hordes" and started != 1 then
@@ -219,10 +224,61 @@ end
 		end
 		return false
 		end
+
+		
+
+		
+		--
+if text == "!tf2bots" and started != 1 then
+local can=0
+	table.foreach(engine.GetAddons(), function(key,addon) 
+		if addon.wsid == "352877666"  and addon.mounted == true then can=1 end
+	end)
+			if can==1 then
+					for k, v in pairs(player.GetAll() ) do 
+							v:SendLua("notification.AddLegacy('"..ply:GetName().." started an TF2 Bot wave!',    NOTIFY_HINT   , 5 )")
+							v:SendLua("notification.AddLegacy('WARNING: Sentry models wont show properly and throw errors! I am working on it.',    NOTIFY_ERROR   , 8 )")
+					end
+					--PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Antlions are coming.") 
+					timer.Create( "TF2BotBlueWave", 2, 5, TF2BotBlueWave )
+					WaveNumber=WaveNumber+1
+					for k, v in pairs(player.GetAll()) do
+				v:GiveAmmo( 15, "Buckshot", true )
+				v:GiveAmmo( 150, "AR2", true )
+				v:GiveAmmo( 1, "Grenade", true )	
+					end
+					return false
+			else ply:SendLua("notification.AddLegacy('The server does not have the TF2 Bots addon!',    NOTIFY_ERROR   , 8 )") end
+		end
+		--
+
+if text == "!amnesia" and started != 1 then
+local can=0
+	table.foreach(engine.GetAddons(), function(key,addon) 
+		if addon.wsid == "160134938"  and addon.mounted == true then can=1 end
+	end)
+			if can==1 then
+					for k, v in pairs(player.GetAll() ) do 
+							v:SendLua("notification.AddLegacy('"..ply:GetName().." started an Amnesia SNPC wave!',    NOTIFY_HINT   , 5 )")
+							--v:SendLua("notification.AddLegacy('WARNING: Sentry models wont show properly and throw errors! I am working on it.',    NOTIFY_ERROR   , 8 )")
+					end
+					--PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Antlions are coming.") 
+					timer.Create( "AmnesiaWave", 5, 5, AmnesiaWave )
+					WaveNumber=WaveNumber+1
+					for k, v in pairs(player.GetAll()) do
+				v:GiveAmmo( 15, "Buckshot", true )
+				v:GiveAmmo( 150, "AR2", true )
+				v:GiveAmmo( 1, "Grenade", true )	
+					end
+					return false
+			else ply:SendLua("notification.AddLegacy('The server does not have the Amnesia SNPCs addon!',    NOTIFY_ERROR   , 8 )") end
+		end
+		--		
+		
 		
 	    if text == "!rebels" then
-		ply:SendLua("notification.AddLegacy('Rebel waves are disabled until I fix them.',    NOTIFY_ERROR   , 5 )")
-		/*
+	--ply:SendLua("notification.AddLegacy('Rebel waves are disabled until I fix them.',    NOTIFY_ERROR   , 5 )")
+
 		PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Rebels are coming.") 
 		timer.Create( "RebelWave", 2, 20, RebelWave )
 		WaveNumber=WaveNumber+1
@@ -231,8 +287,8 @@ end
 	v:GiveAmmo( 150, "AR2", true )
 	v:GiveAmmo( 1, "Grenade", true )	
 		end
+
 		return false
-		*/
 		end
 	if	GetConVarNumber("squad_survival_hlrenaissance") == 1 then
 		    if text == "!hlrenaissance1" and started != 1 then
@@ -284,12 +340,52 @@ end
 		
 		end
 		
---	if string.sub( text, 1, 1 ) == "!" then return false end
-
+	  if text == "!red"  then ply:SendLua("notification.AddLegacy('Model color changed to red.',    NOTIFY_GENERIC    , 5 )") ply:SetPlayerColor(Vector( 1, 0, 0 )) end
+	  if text == "!blue"  then ply:SendLua("notification.AddLegacy('Model color changed to blue.',    NOTIFY_GENERIC    , 5 )") ply:SetPlayerColor(Vector( 0.1, 0.6, 1)) end
+	  if text == "!black"  then ply:SendLua("notification.AddLegacy('Model color changed to black.',    NOTIFY_GENERIC    , 5 )") ply:SetPlayerColor(Vector( 0, 0, 0 )) end
+	  if text == "!white"  then ply:SendLua("notification.AddLegacy('Model color changed to white.',    NOTIFY_GENERIC    , 5 )") ply:SetPlayerColor(Vector( 1, 1, 1 )) end
+	  if text == "!pink"  then ply:SendLua("notification.AddLegacy('Model color changed to pink.',    NOTIFY_GENERIC    , 5 )") ply:SetPlayerColor(Vector( 1, 0.5, 1 )) end
+	  if text == "!green"  then ply:SendLua("notification.AddLegacy('Model color changed to green.',    NOTIFY_GENERIC    , 5 )") ply:SetPlayerColor(Vector( 1, 0, 0 )) end
+	  if text == "!gray"  then ply:SendLua("notification.AddLegacy('Model color changed to gray.',    NOTIFY_GENERIC    , 5 )") ply:SetPlayerColor(Vector( 0.3, 0.3, 0.3 )) end
+	  if text == "!yellow"  then ply:SendLua("notification.AddLegacy('Model color changed to yellow',    NOTIFY_GENERIC    , 5 )") ply:SetPlayerColor(Vector( 1, 1,0)) end
+	  if text == "!darkblue"  then ply:SendLua("notification.AddLegacy('Model color changed to dark blue.',    NOTIFY_GENERIC    , 5 )") ply:SetPlayerColor(Vector( 0, 0,0.5)) end
+	  if text == "!brown"  then ply:SendLua("notification.AddLegacy('Model color changed to brown.',    NOTIFY_GENERIC    , 5 )") ply:SetPlayerColor(Vector( 0.3, 0,0)) end
+	  
+	  if text == "!elite"  then
+	  ply:SetNWString("model","models/player/combine_super_soldier.mdl")
+	  ply:SetModel(ply:GetNWString("model"))
+	  ply:SendLua("notification.AddLegacy('Model changed to Elite Soldier.',    NOTIFY_GENERIC    , 5 )")
+	  end
+	  if text == "!guard"  then
+	  ply:SetNWString("model","models/player/combine_soldier_prisonguard.mdl")
+	  ply:SetModel(ply:GetNWString("model")) 
+	  ply:SendLua("notification.AddLegacy('Model changed to Prison Guard .',    NOTIFY_GENERIC    , 5 )")
+	  end
+	  if text == "!police"  then 
+	  ply:SetNWString("model","models/player/police.mdl")
+	  ply:SetModel(ply:GetNWString("model")) 
+	  ply:SendLua("notification.AddLegacy('Model changed to Metrocop.',    NOTIFY_GENERIC    , 5 )")
+		end
+	  if text == "!fempolice"  then 
+	  ply:SetNWString("model","models/player/police_fem.mdl")
+	  ply:SetModel(ply:GetNWString("model")) 
+	  ply:SendLua("notification.AddLegacy('Model changed to Metrocop (female).',    NOTIFY_GENERIC    , 5 )")
+		end
+	  if text == "!soldier"  then 
+	  ply:SetNWString("model","models/player/combine_soldier.mdl")
+	  ply:SetModel(ply:GetNWString("model")) 
+	  ply:SendLua("notification.AddLegacy('Model changed to Soldier.',    NOTIFY_GENERIC    , 5 )")
+	end
+	if string.sub( text, 1, 1 ) == "!" then return false end
 end	
 hook.Add( "PlayerSay", "ISaid", ISaid )
 
 
+
+CombinePlayerModels={"models/player/police_fem.mdl",
+"models/player/combine_soldier_prisonguard.mdl",
+"models/player/police.mdl",
+"models/player/combine_soldier.mdl"}
 
 
 NPC_WEAPON_PACK_2_RAPID_FIRE={"npc_acr","npc_m4a1iron","npc_m4a1holo","npc_hk416","npc_g36","npc_ak47","npc_fal","npc_m249","npc_hk21e","npc_ump45","npc_p90","npc_mp5","npc_uzi","npc_m24","npc_M76"}
