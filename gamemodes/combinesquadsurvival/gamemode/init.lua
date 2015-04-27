@@ -287,6 +287,18 @@ local entities=0
 		return(entities)
 end
 
+function CountPlayerCombineSoldier(owner)
+local entities=0
+		for k, v in pairs(ents.GetAll()) do
+		if table.HasValue(CombineSoldiers, v:GetClass()) then
+		if v:Health() > 0 and v:GetNWString("owner") == ""..owner.."" then
+			entities=entities+1
+			print(v:GetClass())
+		end
+		end
+		end
+		return(entities)
+end
 
 function CountPlayerCombine(owner)
 local entities=0
@@ -487,7 +499,7 @@ else
 randompl = table.Random(ents.FindByClass("player"))
 end
 --PrintMessage(HUD_PRINTTALK, ""..randompl:GetClass().."")
-if CountEnemies() < 1 then MoreWaves() end
+if CountEnemies() < 2 then MoreWaves() end
 --PrintMessage(HUD_PRINTTALK, "EnemiesLeft: "..EnemiesLeft.."")
 
 end
@@ -1125,7 +1137,7 @@ local info=ply:GetEyeTraceNoCursor()
 			ply:Spawn()
 			ply:AddFrags(-10)
 			ply:SendLua("DeductPoints()")
-			elseif CountPlayerCombine(ply:EntIndex()) > 0 then  ply:SendLua("notification.AddLegacy('You cannot afford to respawn with less than 10 points.',    NOTIFY_ERROR   , 5 )")
+			elseif CountPlayerCombineSoldier(ply:EntIndex()) > 0 then  ply:SendLua("notification.AddLegacy('You need at least 10 points to respawn. Wait for your soldiers to gather these points.',    NOTIFY_ERROR   , 5 )")
 			else
 			ply:UnSpectate()
 			ply:Spawn()
