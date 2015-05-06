@@ -1,6 +1,7 @@
 AddCSLuaFile( "shared.lua" )
 include( "shared.lua" )
 
+
 darkencolor = Color(255,0,0)
 HUDTEXT = "Hidden"
 HUDCOLOR = Color(0,255,0)
@@ -11,6 +12,9 @@ lightcol = 0
 playerfrags=0
 pointscolor=Color(255,255,255)
 EnemyCountHUD=0
+CanShowCommands = false
+
+
 net.Receive( "Spotted", function( length, client )
 	HUDTEXT = 'Spotted'
 	HUDCOLOR=Color(255,8,8)
@@ -50,8 +54,6 @@ squad2followingyou=0
 squad1holdingposition=0
 squad1followingyou=0
 squad1=false
-
-
 squad1numbers=0
 squad2numbers=0
 totalcombinenumber=0
@@ -72,12 +74,19 @@ killicon.AddFont( "npc_satchel",		"HL2MPTypeDeath",	"*",	Color( 255, 80, 0, 255 
 killicon.AddFont( "npc_tripmine",		"HL2MPTypeDeath",	"*",	Color( 255, 80, 0, 255 ) )
 killicon.AddFont( "ai_weapon_crowbar",		"HL2MPTypeDeath",	"6",	Color( 255, 80, 0, 255 ) )
 
+if !ConVarExists("css_orders") then
+	CreateClientConVar( "css_orders", KEY_Q, true, false )
+end
 
-
+if !ConVarExists("css_highlight") then
+	CreateClientConVar( "css_highlight", KEY_X, true, false )
+end
+-- GetConVarNumber("css_highlight")
 net.Receive( "PlayerKillNotice", function( len, ply )
 	GAMEMODE:AddDeathNotice(net.ReadString(), 0, net.ReadString(), net.ReadString(), 1001)
 end)
 
+--GetConVarNumber("css_ddd")
 hook.Add( "PreDrawHalos", "AddHalos", function()
 if LocalPlayer():GetNWString("side") == "combine" then
 
@@ -88,13 +97,13 @@ if LocalPlayer():GetNWString("side") == "combine" then
 
 				if v:GetNWString("selected") == "1" and v:GetNWString("owner") == tostring(localownerid) then
 						halo.Add( {v}, Color( 255,255,255 ), 1, 1, 1, true, true )
-				elseif v:GetNWString("Squad") == "squad1" and v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown(KEY_X) then
+				elseif v:GetNWString("Squad") == "squad1" and v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown(GetConVarNumber("css_highlight")) then
 						halo.Add( {v}, Color( 150,0,0 ), 1, 1, 1, true, true )
 						
-				elseif v:GetNWString("Squad") == "squad2" and v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown(KEY_X) then
+				elseif v:GetNWString("Squad") == "squad2" and v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown(GetConVarNumber("css_highlight")) then
 						halo.Add( {v}, Color( 0,0,150 ), 1, 1, 1, true, true )
 						
-				elseif v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown( KEY_X ) then
+				elseif v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown( GetConVarNumber("css_highlight")) then
 						halo.Add( {v}, Color( 100,100,100 ), 1, 1, 1, true, true )				
 				end
 			end
@@ -175,14 +184,54 @@ else
 end
 
 
+if CanShowCommands == true then
+local line = 0
+draw.RoundedBox(6 , ScrW()*0.25, ScrH() * 0.2, ScrW()*0.5, ScrH() * 0.25+100, Color(255,255,255,20))
+draw.DrawText( "Wave Commands", "TargetID", ScrW()*0.5,(ScrH() * 0.2), Color(255,255,255), TEXT_ALIGN_CENTER )
+line=line+20
+draw.DrawText( "HL2: !zombies, !antlions", "TargetID", ScrW()*0.25+5, line+(ScrH() * 0.2), Color(255,255,255), TEXT_ALIGN_LEFT )
+line=line+20
+draw.DrawText( "Amnesia SNPCs: !amnesia", "TargetID", ScrW()*0.25+5, line+(ScrH() * 0.2), Color(255,255,255), TEXT_ALIGN_LEFT )
+line=line+20
+draw.DrawText( "TF2Bots: !tf2bots", "TargetID", ScrW()*0.25+5, line+(ScrH() * 0.2), Color(255,255,255), TEXT_ALIGN_LEFT )
 
+line=line+20
+draw.DrawText( "BlackMesa SNPCs: !marines, !bmszombies", "TargetID", ScrW()*0.25+5, line+(ScrH() * 0.2), Color(255,255,255), TEXT_ALIGN_LEFT )
+
+line=line+20
+draw.DrawText( "Half Life: Renaissance: !hlrenaissance1, !hlrenaissance2, !hlrenaissance3, !hlrenaissanceboss", "TargetID", ScrW()*0.25+5, line+(ScrH() * 0.2), Color(255,255,255), TEXT_ALIGN_LEFT )
+
+line=line+20
+draw.DrawText( "Divine Cybermancy SNPCs:  !cybermancy", "TargetID", ScrW()*0.25+5, line+(ScrH() * 0.2), Color(255,255,255), TEXT_ALIGN_LEFT )
+
+line=line+20
+draw.DrawText( "No More Room In Hell SNPCs:  !hellzombies", "TargetID", ScrW()*0.25+5, line+(ScrH() * 0.2), Color(255,255,255), TEXT_ALIGN_LEFT )
+
+
+line=line+20
+draw.DrawText( "DrVrej Zombies:  !zombies2", "TargetID", ScrW()*0.25+5, line+(ScrH() * 0.2), Color(255,255,255), TEXT_ALIGN_LEFT )
+line=line+20
+draw.DrawText( "Alien Swarm:  !swarm", "TargetID", ScrW()*0.25+5, line+(ScrH() * 0.2), Color(255,255,255), TEXT_ALIGN_LEFT )
+line=line+20
+draw.DrawText( "Dark Messiah:  !messiah", "TargetID", ScrW()*0.25+5, line+(ScrH() * 0.2), Color(255,255,255), TEXT_ALIGN_LEFT )
+
+
+line=line+50
+draw.DrawText( "Minimode Commands", "TargetID", ScrW()*0.5,(ScrH() * 0.2)+line, Color(255,255,255), TEXT_ALIGN_CENTER )
+line=line+20
+draw.DrawText( "Hunted: !hunted, !stophunted", "TargetID", ScrW()*0.25+5, line+(ScrH() * 0.2), Color(255,255,255), TEXT_ALIGN_LEFT )
+line=line+20
+draw.DrawText( "Find the Document: !document", "TargetID", ScrW()*0.25+5, line+(ScrH() * 0.2), Color(255,255,255), TEXT_ALIGN_LEFT )
+line=line+20
+draw.DrawText( "Automatic waves: !hordes, !stop", "TargetID", ScrW()*0.25+5, line+(ScrH() * 0.2), Color(255,255,255), TEXT_ALIGN_LEFT )
+end
 
 end)
 
 hook.Add("Tick", "KeyDown_Test", function()
 if LocalPlayer():GetNWString("side") == "combine" then
 
-if input.IsKeyDown(KEY_Q) then
+if input.IsKeyDown(GetConVarNumber("css_orders")) then
 gui.EnableScreenClicker(true)		
 	if canshow==1 then
 		canshow=0
@@ -747,9 +796,8 @@ end
 
 function Test()
 print("D")
-notification.AddProgress( "HuntedPreparation", "Say !ready to spawn where you are." )
+notification.AddProgress( "Hordes", "Horde Minimode" )
 timer.Simple( 5, function()
-notification.Kill( "HuntedPreparation" )
 end )
 end
 
@@ -832,3 +880,16 @@ if LocalPlayer():GetNWString("side") == "rebel" then
 	end
 end
 end
+
+
+
+function FinishTyping()
+	print( "User has closed the chatbox." )
+	CanShowCommands= false
+end
+hook.Add( "FinishChat", "ClientFinishTyping", FinishTyping )
+
+function isStartTyping( isTeamChat )
+	CanShowCommands = true
+end
+hook.Add( "StartChat", "HasStartedTyping", isStartTyping )

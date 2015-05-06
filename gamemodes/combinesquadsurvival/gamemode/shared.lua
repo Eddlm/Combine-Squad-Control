@@ -2,9 +2,20 @@ GM.Name = "Combine Squad Survival"
 GM.Author = "Eddlm"
 GM.Email = "eddmalaga@gmail.com"
 GM.Website = "http://facepunch.com/showthread.php?t=1391522"
+-- BLACK MESA --
+--
+DrVrejZombies = {"sent_vj_zss_fastrand","sent_vj_zss_randregularz","sent_vj_zss_zombierand","sent_vj_zss_zprand"}
+BlackMesaSNPCsZombies = {"npc_vj_bmsz_zombiecop","npc_vj_bmsz_zombiesci","npc_vj_bmsz_zombiecop_nheadc","npc_vj_bmsz_zombiesci_nheadc","npc_vj_bmsz_zombiescito_nheadc"}
+BlackMesaSNPCsMarines = {"npc_vj_bmssold_marines"}
+NoMoreRoomInHell = {"sent_vj_nmrih_runrandz","sent_vj_nmrih_walkrandz","sent_vj_nmrih_randz"}
+-- EYE: DIVINE CYBERMANCY npc_vj_eye_carnophage
+--
+DivineCybermancy = {"npc_vj_eye_deer","npc_vj_eye_kraak","npc_vj_eye_manduco","npc_vj_eye_forma"}
+--npc_vj_eye_deusex,
+DarkMessiah = {"npc_vj_dmvj_facehugger","npc_vj_dmvj_spider"}
+SquadSurvivalWaves = {ZombieWave,AntLionWave}
 
-AmnesiaSNPCs = {"monster_amn_brute","monster_amn_grunt","monster_amn_suitor"}
-
+-- insurgents -- npc_vj_mili_terrorist
 playermodels = {
 "models/player/group03/male_01.mdl",
 "models/player/group03/male_02.mdl",
@@ -16,7 +27,7 @@ playermodels = {
 "models/player/group03/male_08.mdl",
 "models/player/group03/male_09.mdl",
 }
-
+AlienSwarm ={"npc_vj_as_boomer","npc_vj_as_drone","npc_vj_as_sbug"}
 AmnesiaSNPCs = {"monster_amn_brute","monster_amn_grunt","monster_amn_suitor"}
 
 TF2BotBlue = {"npc_demo_blue","npc_engineer_blue","npc_hwg_blue","npc_medic_blue","npc_pyro_blue","npc_scout_blue","npc_sniper_blue","npc_soldier_blue","npc_spy_blue"}
@@ -133,7 +144,7 @@ end
 			ply:SetMoveType(MOVETYPE_WALK )
 			UpdateRelationships()
 			if GetConVarString("squad_survival_player_loadout") == "" then else
-				print("[Combine Squad Survival]: Loaded "..GetConVarString("squad_survival_player_loadout").." for the players at start.")
+
 				local sentence = ""..GetConVarString("squad_survival_player_loadout")..""
 				local words = string.Explode( ",", sentence )
 				table.foreach(words, function(key,value)
@@ -165,7 +176,7 @@ end
 			ply:SetNoTarget(false)
 			ply:SetMoveType(MOVETYPE_WALK )
 			if GetConVarString("squad_survival_player_loadout") == "" then else
-				print("[Combine Squad Survival]: Loaded "..GetConVarString("squad_survival_player_loadout").." for the players at start.")
+
 				local sentence = ""..GetConVarString("squad_survival_player_loadout")..""
 				local words = string.Explode( ",", sentence )
 				table.foreach(words, function(key,value)
@@ -183,17 +194,30 @@ elseif text == "!stophunted" and ply.huntedready != 1 then ply:SendLua("notifica
 	    if text == "!hordes" and started != 1 then
 		started=1
 		CanSpawnCombine=0
+		for k, v in pairs(player.GetAll() ) do 
+				v:SendLua("notification.AddProgress( 'Hordes', 'Horde Minimode' )")
+		end
 		AddonCycleLong()
 		return false
 	end
 	    if text == "!stop" then
 		CanSpawnCombine=1
 		started=0
+		for k, v in pairs(player.GetAll() ) do 
+				v:SendLua("notification.Kill( 'Hordes' )")
+		end
 		timer.Remove( "AddonCycleLong")
 		return false
 		end
 	    if text == "!document" then Minimode_FindTheDocuments() return false end
-		
+			   
+			   if text == "!remove" then
+				if ply:GetEyeTraceNoCursor().Entity then
+					if ply:GetEyeTraceNoCursor().Entity:GetNWString("owner") == ""..ply:EntIndex().."" then 	ply:GetEyeTraceNoCursor().Entity:Remove() 
+					end
+				end
+				return false end
+
 	    if text == "!zombies" and started != 1 then
 		for k, v in pairs(player.GetAll() ) do 
 				v:SendLua("notification.AddLegacy('"..ply:GetName().." started a Zombies wave!',    NOTIFY_HINT   , 5 )")
@@ -251,6 +275,53 @@ local can=0
 			else ply:SendLua("notification.AddLegacy('The server does not have the TF2 Bots addon!',    NOTIFY_ERROR   , 8 )") end
 		end
 		--
+		---
+
+if text == "!bmszombies" and started != 1 then
+local can=0
+	table.foreach(engine.GetAddons(), function(key,addon) 
+		if addon.wsid == "173344427"  and addon.mounted == true then can=1 end
+	end)
+			if can==1 then
+					for k, v in pairs(player.GetAll() ) do 
+							v:SendLua("notification.AddLegacy('"..ply:GetName().." started a Black Mesa Zombies wave!',    NOTIFY_HINT   , 5 )")
+					end
+					--PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Antlions are coming.") 
+					timer.Create( "BlackMesaSNPCsZombiesWave", 2, 5, BlackMesaSNPCsZombiesWave )
+					WaveNumber=WaveNumber+1
+					for k, v in pairs(player.GetAll()) do
+					v:GiveAmmo( 15, "Buckshot", true )
+					v:GiveAmmo( 150, "AR2", true )
+					v:GiveAmmo( 1, "Grenade", true )	
+					end
+					return false
+			else ply:SendLua("notification.AddLegacy('The server does not have the BlackMesa SNPCs addon!',    NOTIFY_ERROR   , 8 )") end
+		end		
+		
+		---
+	
+		--
+if text == "!marines" and started != 1 then
+local can=0
+	table.foreach(engine.GetAddons(), function(key,addon) 
+		if addon.wsid == "173344427"  and addon.mounted == true then can=1 end
+	end)
+			if can==1 then
+					for k, v in pairs(player.GetAll() ) do 
+							v:SendLua("notification.AddLegacy('"..ply:GetName().." started a Marines wave!',    NOTIFY_HINT   , 5 )")
+					end
+					--PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Antlions are coming.") 
+					timer.Create( "BlackMesaSNPCsMarinesWave", 1, 5, BlackMesaSNPCsMarinesWave )
+					WaveNumber=WaveNumber+1
+					for k, v in pairs(player.GetAll()) do
+					v:GiveAmmo( 15, "Buckshot", true )
+					v:GiveAmmo( 150, "AR2", true )
+					v:GiveAmmo( 1, "Grenade", true )	
+					end
+					return false
+			else ply:SendLua("notification.AddLegacy('The server does not have the BlackMesa SNPCs addon!',    NOTIFY_ERROR   , 8 )") end
+		end
+		--		
 
 if text == "!amnesia" and started != 1 then
 local can=0
@@ -260,10 +331,8 @@ local can=0
 			if can==1 then
 					for k, v in pairs(player.GetAll() ) do 
 							v:SendLua("notification.AddLegacy('"..ply:GetName().." started an Amnesia SNPC wave!',    NOTIFY_HINT   , 5 )")
-							--v:SendLua("notification.AddLegacy('WARNING: Sentry models wont show properly and throw errors! I am working on it.',    NOTIFY_ERROR   , 8 )")
 					end
-					--PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Antlions are coming.") 
-					timer.Create( "AmnesiaWave", 5, 5, AmnesiaWave )
+					timer.Create( "AmnesiaWave", 1, 5, AmnesiaWave )
 					WaveNumber=WaveNumber+1
 					for k, v in pairs(player.GetAll()) do
 				v:GiveAmmo( 15, "Buckshot", true )
@@ -273,9 +342,113 @@ local can=0
 					return false
 			else ply:SendLua("notification.AddLegacy('The server does not have the Amnesia SNPCs addon!',    NOTIFY_ERROR   , 8 )") end
 		end
+		
 		--		
+
+if text == "!swarm" and started != 1 then
+local can=0
+	table.foreach(engine.GetAddons(), function(key,addon) 
+		if addon.wsid == "126336699"  and addon.mounted == true then can=1 end
+	end)
+			if can==1 then
+					for k, v in pairs(player.GetAll() ) do 
+							v:SendLua("notification.AddLegacy('"..ply:GetName().." started an Alien Swarm wave!',    NOTIFY_HINT   , 5 )")
+					end
+					timer.Create( "AlienSwarmWave", 1, 5, AlienSwarmWave )
+					WaveNumber=WaveNumber+1
+					for k, v in pairs(player.GetAll()) do
+				v:GiveAmmo( 15, "Buckshot", true )
+				v:GiveAmmo( 150, "AR2", true )
+				v:GiveAmmo( 1, "Grenade", true )	
+					end
+					return false
+			else ply:SendLua("notification.AddLegacy('The server does not have the Alien Swarm SNPCs addon!',    NOTIFY_ERROR   , 8 )") end
+		end
+
+
+
+if text == "!messiah" and started != 1 then
+local can=0
+	table.foreach(engine.GetAddons(), function(key,addon) 
+		if addon.wsid == "111626188"  and addon.mounted == true then can=1 end
+	end)
+			if can==1 then
+					for k, v in pairs(player.GetAll() ) do 
+							v:SendLua("notification.AddLegacy('"..ply:GetName().." started a Dark Messiah wave!',    NOTIFY_HINT   , 5 )")
+					end
+					timer.Create( "DarkMessiahWave", 1, 5, DarkMessiahWave )
+					WaveNumber=WaveNumber+1
+					for k, v in pairs(player.GetAll()) do
+				v:GiveAmmo( 15, "Buckshot", true )
+				v:GiveAmmo( 150, "AR2", true )
+				v:GiveAmmo( 1, "Grenade", true )	
+					end
+					return false
+			else ply:SendLua("notification.AddLegacy('The server does not have the Dark Messiah SNPCs addon!',    NOTIFY_ERROR   , 8 )") end
+		end
+if text == "!cybermancy" and started != 1 then
+local can=0
+	table.foreach(engine.GetAddons(), function(key,addon) 
+		if addon.wsid == "144564818"  and addon.mounted == true then can=1 end
+	end)
+			if can==1 then
+					for k, v in pairs(player.GetAll() ) do 
+							v:SendLua("notification.AddLegacy('"..ply:GetName().." started a Divine Cybermancy wave!',    NOTIFY_HINT   , 5 )")
+					end
+					timer.Create( "DivineCybermancyWave", 1, 5, DivineCybermancyWave )
+					WaveNumber=WaveNumber+1
+					for k, v in pairs(player.GetAll()) do
+				v:GiveAmmo( 15, "Buckshot", true )
+				v:GiveAmmo( 150, "AR2", true )
+				v:GiveAmmo( 1, "Grenade", true )	
+					end
+					return false
+			else ply:SendLua("notification.AddLegacy('The server does not have the Divine Cybermancy SNPCs addon!',    NOTIFY_ERROR   , 8 )") end
+		end	
+
+if text == "!hellzombies" and started != 1 then
+local can=0
+	table.foreach(engine.GetAddons(), function(key,addon) 
+		if addon.wsid == "221942657"  and addon.mounted == true then can=1 end
+	end)
+			if can==1 then
+					for k, v in pairs(player.GetAll() ) do 
+							v:SendLua("notification.AddLegacy('"..ply:GetName().." started a No More Room In Hell wave!',    NOTIFY_HINT   , 5 )")
+					end
+					timer.Create( "NoMoreRoomInHellWave", 1, 5, NoMoreRoomInHellWave )
+					WaveNumber=WaveNumber+1
+					for k, v in pairs(player.GetAll()) do
+				v:GiveAmmo( 15, "Buckshot", true )
+				v:GiveAmmo( 150, "AR2", true )
+				v:GiveAmmo( 1, "Grenade", true )	
+					end
+					return false
+			else ply:SendLua("notification.AddLegacy('The server does not have the No More Room In Hell SNPCs addon!',    NOTIFY_ERROR   , 8 )") end
+		end		
+
+
+if text == "!zombies2" and started != 1 then
+local can=0
+	table.foreach(engine.GetAddons(), function(key,addon) 
+		if addon.wsid == "152529683"  and addon.mounted == true then can=1 end
+	end)
+			if can==1 then
+					for k, v in pairs(player.GetAll() ) do 
+							v:SendLua("notification.AddLegacy('"..ply:GetName().." started a Zombies wave!',    NOTIFY_HINT   , 5 )")
+					end
+					timer.Create( "DrVrejZombiesWave", 1, 5, DrVrejZombiesWave )
+					WaveNumber=WaveNumber+1
+					for k, v in pairs(player.GetAll()) do
+				v:GiveAmmo( 15, "Buckshot", true )
+				v:GiveAmmo( 150, "AR2", true )
+				v:GiveAmmo( 1, "Grenade", true )	
+					end
+					return false
+			else ply:SendLua("notification.AddLegacy('The server does not have the Zombies SNPCs addon!',    NOTIFY_ERROR   , 8 )") end
+		end		
 		
-		
+		--	
+/*		
 	    if text == "!rebels" then
 	--ply:SendLua("notification.AddLegacy('Rebel waves are disabled until I fix them.',    NOTIFY_ERROR   , 5 )")
 
@@ -287,59 +460,94 @@ local can=0
 	v:GiveAmmo( 150, "AR2", true )
 	v:GiveAmmo( 1, "Grenade", true )	
 		end
+-- 
+		return false
+		end
+*/		
+---
 
-		return false
+if text == "!hlrenaissance1" and started != 1 then
+local can=0
+	table.foreach(engine.GetAddons(), function(key,addon) 
+		if addon.wsid == "125988781"  and addon.mounted == true then can=1 end
+	end)
+			if can==1 then
+					for k, v in pairs(player.GetAll() ) do 
+							v:SendLua("notification.AddLegacy('"..ply:GetName().." started an HL:Renaissance(1) wave!',    NOTIFY_HINT   , 5 )")
+					end
+					timer.Create( "hlrenaissance1", 5, 5, hlrenaissance1 )
+					WaveNumber=WaveNumber+1
+					for k, v in pairs(player.GetAll()) do
+				v:GiveAmmo( 15, "Buckshot", true )
+				v:GiveAmmo( 150, "AR2", true )
+				v:GiveAmmo( 1, "Grenade", true )	
+					end
+					return false
+			else ply:SendLua("notification.AddLegacy('The server does not have the HL:Renaissance addon!',    NOTIFY_ERROR   , 8 )") end
 		end
-	if	GetConVarNumber("squad_survival_hlrenaissance") == 1 then
-		    if text == "!hlrenaissance1" and started != 1 then
-		PrintMessage(HUD_PRINTTALK, "[Overwatch]: Done.") 
-		timer.Create( "hlrenaissance1", 2, 20, hlrenaissance1 )
-		WaveNumber=WaveNumber+1
-		for k, v in pairs(player.GetAll()) do
-			v:GiveAmmo( 15, "Buckshot", true )
-			v:GiveAmmo( 150, "AR2", true )
-			v:GiveAmmo( 1, "Grenade", true )	
-		end
-		return false
-		end	
-		    if text == "!hlrenaissance2" and started != 1 then
-		PrintMessage(HUD_PRINTTALK, "[Overwatch]: Done.") 
-		timer.Create( "hlrenaissance2", 2, 20, hlrenaissance1 )
-		WaveNumber=WaveNumber+1
-		for k, v in pairs(player.GetAll()) do
-			v:GiveAmmo( 15, "Buckshot", true )
-			v:GiveAmmo( 150, "AR2", true )
-			v:GiveAmmo( 1, "Grenade", true )	
-		end
-		return false
-		end	
-		    if text == "!hlrenaissance3" and started != 1 then
-		PrintMessage(HUD_PRINTTALK, "[Overwatch]: Done.") 
-		timer.Create( "hlrenaissance3", 2, 20, hlrenaissance3 )
-		WaveNumber=WaveNumber+1
-		for k, v in pairs(player.GetAll()) do
-			v:GiveAmmo( 15, "Buckshot", true )
-			v:GiveAmmo( 150, "AR2", true )
-			v:GiveAmmo( 1, "Grenade", true )	
-		end
-		return false
-		end	
 
-			   if text == "!hlrenaissanceboss" and started != 1 then
-		PrintMessage(HUD_PRINTTALK, "[Overwatch]: Done.") 
-		timer.Create( "hlrenaissanceboss", 2, 1, hlrenaissanceboss )
-		WaveNumber=WaveNumber+1
-		for k, v in pairs(player.GetAll()) do
-			v:GiveAmmo( 15, "Buckshot", true )
-			v:GiveAmmo( 150, "AR2", true )
-			v:GiveAmmo( 1, "Grenade", true )	
+if text == "!hlrenaissance2" and started != 1 then
+local can=0
+	table.foreach(engine.GetAddons(), function(key,addon) 
+		if addon.wsid == "125988781"  and addon.mounted == true then can=1 end
+	end)
+			if can==1 then
+					for k, v in pairs(player.GetAll() ) do 
+							v:SendLua("notification.AddLegacy('"..ply:GetName().." started an HL:Renaissance(2) wave!',    NOTIFY_HINT   , 5 )")
+					end
+					timer.Create( "hlrenaissance2", 5, 5, hlrenaissance2 )
+					WaveNumber=WaveNumber+1
+					for k, v in pairs(player.GetAll()) do
+				v:GiveAmmo( 15, "Buckshot", true )
+				v:GiveAmmo( 150, "AR2", true )
+				v:GiveAmmo( 1, "Grenade", true )	
+					end
+					return false
+			else ply:SendLua("notification.AddLegacy('The server does not have the HL:Renaissance addon!',    NOTIFY_ERROR   , 8 )") end
 		end
-		return false
-		end	
-		
-		
+
+if text == "!hlrenaissance3" and started != 1 then
+local can=0
+	table.foreach(engine.GetAddons(), function(key,addon) 
+		if addon.wsid == "125988781"  and addon.mounted == true then can=1 end
+	end)
+			if can==1 then
+					for k, v in pairs(player.GetAll() ) do 
+							v:SendLua("notification.AddLegacy('"..ply:GetName().." started an HL:Renaissance(3) wave!',    NOTIFY_HINT   , 5 )")
+					end
+					timer.Create( "hlrenaissance3", 5, 5, hlrenaissance3 )
+					WaveNumber=WaveNumber+1
+					for k, v in pairs(player.GetAll()) do
+				v:GiveAmmo( 15, "Buckshot", true )
+				v:GiveAmmo( 150, "AR2", true )
+				v:GiveAmmo( 1, "Grenade", true )	
+					end
+					return false
+			else ply:SendLua("notification.AddLegacy('The server does not have the HL:Renaissance addon!',    NOTIFY_ERROR   , 8 )") end
+		end
+
+if text == "!hlrenaissanceboss" and started != 1 then
+local can=0
+	table.foreach(engine.GetAddons(), function(key,addon) 
+		if addon.wsid == "125988781"  and addon.mounted == true then can=1 end
+	end)
+			if can==1 then
+					for k, v in pairs(player.GetAll() ) do 
+							v:SendLua("notification.AddLegacy('"..ply:GetName().." started an HL:Renaissance BOSS wave!',    NOTIFY_HINT   , 5 )")
+					end
+							hlrenaissanceboss()
+					WaveNumber=WaveNumber+1
+					for k, v in pairs(player.GetAll()) do
+				v:GiveAmmo( 15, "Buckshot", true )
+				v:GiveAmmo( 150, "AR2", true )
+				v:GiveAmmo( 1, "Grenade", true )	
+					end
+					return false
+			else ply:SendLua("notification.AddLegacy('The server does not have the HL:Renaissance addon!',    NOTIFY_ERROR   , 8 )") end
 		end
 		
+---
+
 	  if text == "!red"  then ply:SendLua("notification.AddLegacy('Model color changed to red.',    NOTIFY_GENERIC    , 5 )") ply:SetPlayerColor(Vector( 1, 0, 0 )) end
 	  if text == "!blue"  then ply:SendLua("notification.AddLegacy('Model color changed to blue.',    NOTIFY_GENERIC    , 5 )") ply:SetPlayerColor(Vector( 0.1, 0.6, 1)) end
 	  if text == "!black"  then ply:SendLua("notification.AddLegacy('Model color changed to black.',    NOTIFY_GENERIC    , 5 )") ply:SetPlayerColor(Vector( 0, 0, 0 )) end
@@ -381,12 +589,20 @@ end
 hook.Add( "PlayerSay", "ISaid", ISaid )
 
 
+function GM:AllowPlayerPickup(ply,ent) 
+if ent:GetNWString("name") == "TheDocument" then
+ent:Remove()
+local player = ply
+FindTheDocumentsWin(player)
+end
+return true
+end
+
 
 CombinePlayerModels={"models/player/police_fem.mdl",
 "models/player/combine_soldier_prisonguard.mdl",
 "models/player/police.mdl",
 "models/player/combine_soldier.mdl"}
-
 
 NPC_WEAPON_PACK_2_RAPID_FIRE={"npc_acr","npc_m4a1iron","npc_m4a1holo","npc_hk416","npc_g36","npc_ak47","npc_fal","npc_m249","npc_hk21e","npc_ump45","npc_p90","npc_mp5","npc_uzi","npc_m24","npc_M76"}
 

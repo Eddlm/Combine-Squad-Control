@@ -108,7 +108,7 @@ net.Receive( "addzoneselected", function( length, client )
 
 		for k, v in pairs(ents.GetAll()) do
 			if v:GetNWString("selected") == "1" and v:GetNWString("owner") == ""..client:EntIndex().."" then
-			print(v:GetClass())
+			--print(v:GetClass())
 			if !v.patrolzones then v.patrolzones = {} end
 			table.insert(v.patrolzones, client:GetEyeTraceNoCursor().HitPos)
 			PrintTable(v.patrolzones)
@@ -121,7 +121,7 @@ net.Receive( "ClearZoneSelected", function( length, client )
 
 		for k, v in pairs(ents.GetAll()) do
 			if v:GetNWString("selected") == "1" and v:GetNWString("owner") == ""..client:EntIndex().."" then
-			print(v:GetClass())
+			--print(v:GetClass())
 			table.Empty(v.patrolzones)
 			 v.patrol = 0
 			end
@@ -202,7 +202,7 @@ if CanSpawnCombine==1 then
 	client:PrintMessage(HUD_PRINTTALK, "Dismiss the existing air unit before requesting another.") 	
 	end
 	
-	else 
+	elseif data != "Mortar" and data != "DismissAirUnits" then
 		client:SendLua("notification.AddLegacy('You cannot request reinforcments right now!',    NOTIFY_ERROR   , 5 )")
 end
 
@@ -251,19 +251,17 @@ function MoreWaves()
 		end
 CanSpawnCombine=1
 
-PrintMessage(HUD_PRINTTALK, "You have 30 seconds untill the next wave")
+	for k, v in pairs(player.GetAll() ) do 
+			v:SendLua("notification.AddLegacy('30 seconds until the next wave appears.',    NOTIFY_HINT   , 5 )")
+	end
+		
 WaveNumber=WaveNumber+1
-
 timer.Simple(30, function()
 CanSpawnCombine=0
-		local randomnumber = math.random(1,2)
-		if randomnumber == 1 then
-		timer.Create( "ZombieWave", 0.5, 20, ZombieWave )
-		PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Necrotics are coming.")
-		elseif randomnumber == 2 then
-		timer.Create( "AntLionWave", 0.5, 20, AntLionWave )
-		PrintMessage(HUD_PRINTTALK, "[Overwatch]: More Antlions are coming.")
-		end
+		timer.Create( "Horde", 0.5, 20, table.Random(SquadSurvivalWaves))
+		for k, v in pairs(player.GetAll() ) do 
+				v:SendLua("notification.AddLegacy('The Horde is coming!', NOTIFY_HINT   , 5 )")
+		end	
 end)
 end
 	
@@ -293,7 +291,7 @@ local entities=0
 		if table.HasValue(CombineSoldiers, v:GetClass()) then
 		if v:Health() > 0 and v:GetNWString("owner") == ""..owner.."" then
 			entities=entities+1
-			print(v:GetClass())
+			--print(v:GetClass())
 		end
 		end
 		end
@@ -306,7 +304,7 @@ local entities=0
 		if table.HasValue(AllCombineEntities, v:GetClass()) then
 		if v:Health() > 0 and v:GetNWString("owner") == ""..owner.."" then
 			entities=entities+1
-			print(v:GetClass())
+			--print(v:GetClass())
 		end
 		end
 		end
@@ -335,172 +333,213 @@ end
 
 function CountAirUnits()
 local entities=0
-		for k, v in pairs(ents.GetAll()) do
+	for k, v in pairs(ents.GetAll()) do
 		if table.HasValue(CombineHelicopters, v:GetClass()) then
 			entities=entities+1
 		end
-		end
+	end
 		return(entities)
 end
+
+
+
+---------------------  WAVES ---------------------
 function AntLionWave()
---PrintMessage(HUD_PRINTTALK, "AntLionWave")
+	if CountEntity("npc_antlion") < 10+WaveNumber then
+		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns), "npc_antlion")
+	end
 
-if CountEntity("npc_antlion") < 10+WaveNumber then
-SpawnBasicNPC(table.Random(EnemiesAvailableSpawns), "npc_antlion")
-end
-
-if CountEntity("npc_antlionguard") < 1 and WaveNumber > 5 then
-SpawnBasicNPC(table.Random(combinespawnzones), "npc_antlionguard")
-end
+	if CountEntity("npc_antlionguard") < 1 and WaveNumber > 5 then
+		SpawnBasicNPC(table.Random(combinespawnzones), "npc_antlionguard")
+	end
 end
 
 function RebelWave()
---PrintMessage(HUD_PRINTTALK, "RebelWave")
-
-if CountEntity("npc_citizen") < 20 then
-SpawnRebel(table.Random(EnemiesAvailableSpawns))
-end
+	if CountEntity("npc_citizen") < 20 then
+		SpawnRebel(table.Random(EnemiesAvailableSpawns))
+	end
 
 if WaveNumber > 5 then
-if CountEntity("npc_vortigaunt") < WaveNumber then
-SpawnBasicNPC(table.Random(EnemiesAvailableSpawns), "npc_vortigaunt")
-end
+	if CountEntity("npc_vortigaunt") < WaveNumber then
+		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns), "npc_vortigaunt")
+	end
 end
 end
 
 
 
 function hlrenaissance1()
---PrintMessage(HUD_PRINTTALK, "RebelWave")
-
 	table.foreach(HLRenaissance1, function(key,value)
-		if CountEntity(value) < 2+WaveNumber then
+		if CountEntity(value) < WaveNumber then
 		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns),value)
-		end
+				PrintMessage(HUD_PRINTTALK, value) 		end
 	end)
-	
 end
 function hlrenaissance2()
---PrintMessage(HUD_PRINTTALK, "RebelWave")
-
 	table.foreach(HLRenaissance2, function(key,value)
-		if CountEntity(value) < 2+WaveNumber then
+		if CountEntity(value) < WaveNumber then
 		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns),value)
-		end
+				PrintMessage(HUD_PRINTTALK, value) 		end
 	end)
-	
 end
 
 function hlrenaissance3()
---PrintMessage(HUD_PRINTTALK, "RebelWave")
-
 	table.foreach(HLRenaissance3, function(key,value)
-		if CountEntity(value) < 2+WaveNumber then
+		if CountEntity(value) < WaveNumber then
 		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns),value)
-		end
+				PrintMessage(HUD_PRINTTALK, value) 		end
 	end)
-	
 end
 
 function TF2BotBlueWave()
 local bots= 0
-	table.foreach(TF2BotBlue, function(key,value) bots=bots+CountEntity(value) end)
+	table.foreach(TF2BotBlue, function(key,value) bots=bots+CountEntity(value)
 		if bots < WaveNumber then
-		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns),table.Random(TF2BotBlue))
-		end
+		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns),value)
+				PrintMessage(HUD_PRINTTALK, value) 		end
+				 end)
 end
 
 function AmnesiaWave()
-PrintMessage(HUD_PRINTTALK, "AmnesiaSNPCs")
 local bots= 0
-		table.foreach(AmnesiaSNPCs, function(key,value) bots=bots+CountEntity(value) end)
+	table.foreach(AmnesiaSNPCs, function(key,value) bots=bots+CountEntity(value)
 		if bots < WaveNumber then
-		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns),table.Random(AmnesiaSNPCs))
-		end
+		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns),value)
+				PrintMessage(HUD_PRINTTALK, value) 		end
+				 end)
 end
+
+function BlackMesaSNPCsMarinesWave()
+local bots = 0
+	table.foreach(BlackMesaSNPCsMarines, function(key,value) bots=bots+CountEntity(value)
+		if bots < WaveNumber+2 then
+		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns),value)
+				PrintMessage(HUD_PRINTTALK, value) 		end
+				 end)
+end
+
+function BlackMesaSNPCsZombiesWave()
+local bots = 0
+	table.foreach(BlackMesaSNPCsZombies, function(key,value) bots=bots+CountEntity(value)
+		if bots < WaveNumber+2 then
+		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns),value)
+				PrintMessage(HUD_PRINTTALK, value) 		end
+				 end)
+end
+
 function hlrenaissanceboss()
-
-SpawnBasicNPC(table.Random(combinespawnzones),table.Random(HLRenaissanceBosses))
-
-	
+local bots = 0
+	table.foreach(HLRenaissanceBosses, function(key,value) bots=bots+CountEntity(value)
+		if bots < 1 then
+		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns),value)
+				PrintMessage(HUD_PRINTTALK, value) 		end
+				 end)
 end
 
+function AlienSwarmWave()
+local bots = 0
+	table.foreach(AlienSwarm, function(key,value) bots=bots+CountEntity(value)
+		if bots < WaveNumber+2 then
+		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns),value)
+				PrintMessage(HUD_PRINTTALK, value) 
+		end
+		 end)
+end
 
+function DarkMessiahWave()
+local bots = 0
+	table.foreach(DarkMessiah, function(key,value) bots=bots+CountEntity(value)
+		if bots < WaveNumber+2 then
+			SpawnBasicNPC(table.Random(EnemiesAvailableSpawns),value)
+				PrintMessage(HUD_PRINTTALK, value) 
 
+		end
+		 end)
+end
+function DivineCybermancyWave()
+local bots = 0
+	table.foreach(DivineCybermancy, function(key,value) bots=bots+CountEntity(value)
+		if bots < WaveNumber+2 then
+		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns),value)
+				PrintMessage(HUD_PRINTTALK, value) 
+				
+		end
+		 end)
+end
+
+function NoMoreRoomInHellWave()
+
+local bots = 0
+	table.foreach(NoMoreRoomInHell, function(key,value) bots=bots+CountEntity(value)
+	PrintMessage(HUD_PRINTTALK, value)
+		if bots < WaveNumber+2 then
+		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns),value)
+				 		end
+						 end)
+end
+
+function DrVrejZombiesWave()
+local bots = 0
+	table.foreach(DrVrejZombies, function(key,value) bots=bots+CountEntity(value)
+
+		if bots < WaveNumber+2 then
+		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns),value)
+				PrintMessage(HUD_PRINTTALK, value) 		end
+				 end)
+end
 
 function ZombieWave()
---PrintMessage(HUD_PRINTTALK, "ZombieWave")
-
-if CountEntity("npc_fastzombie") < math.random(5,7)+WaveNumber then
-SpawnBasicNPC(table.Random(EnemiesAvailableSpawns), "npc_fastzombie")
-end
-
-if CountEntity("npc_zombie") < math.random(10,20)+WaveNumber then
-SpawnBasicNPC(table.Random(EnemiesAvailableSpawns), "npc_zombie")
-end
-
-if CountEntity("npc_poisonzombie") < math.random(2,5)+WaveNumber then
-SpawnBasicNPC(table.Random(EnemiesAvailableSpawns), "npc_poisonzombie")
-end
+	if CountEntity("npc_fastzombie") < math.random(2,5)+WaveNumber then
+		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns), "npc_fastzombie")
+	end
+	
+	if CountEntity("npc_zombie") < math.random(10,20)+WaveNumber then
+		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns), "npc_zombie")
+	end
+	
+	if CountEntity("npc_poisonzombie") < math.random(1,3)+WaveNumber then
+		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns), "npc_poisonzombie")
+	end
 
 
 if IsMounted("ep1") or IsMounted("ep2") then
-
-if CountEntity("npc_zombine") < math.random(2,5)+WaveNumber then
-SpawnBasicNPC(table.Random(EnemiesAvailableSpawns), "npc_zombine")
+	if CountEntity("npc_zombine") < math.random(2,4)+WaveNumber then
+		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns), "npc_zombine")
+	end
 end
-
-
-end
-
-
 end
 
 
 
 function ZombieWaveFindTheDocument()
+	if CountEntity("npc_fastzombie") < 2+WaveNumber then
+		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns), "npc_fastzombie")
+	end
+	
+	if CountEntity("npc_zombie") <5+WaveNumber then
+		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns), "npc_zombie")
+	end
+	
+	if CountEntity("npc_poisonzombie") < 1+WaveNumber then
+		SpawnBasicNPC(table.Random(EnemiesAvailableSpawns), "npc_poisonzombie")
+	end
 
-if CountEntity("npc_fastzombie") < 2+WaveNumber then
-SpawnBasicNPC(table.Random(EnemiesAvailableSpawns), "npc_fastzombie")
-end
-
-if CountEntity("npc_zombie") <5+WaveNumber then
-SpawnBasicNPC(table.Random(EnemiesAvailableSpawns), "npc_zombie")
-end
-
-if CountEntity("npc_poisonzombie") < 1+WaveNumber then
-SpawnBasicNPC(table.Random(EnemiesAvailableSpawns), "npc_poisonzombie")
-end
-
-
-if IsMounted("ep1") or IsMounted("ep2") then
-
-if CountEntity("npc_zombine") < 1+WaveNumber then
-SpawnBasicNPC(table.Random(EnemiesAvailableSpawns), "npc_zombine")
-end
-
+	if IsMounted("ep1") or IsMounted("ep2") then
+		if CountEntity("npc_zombine") < 1+WaveNumber then
+			SpawnBasicNPC(table.Random(EnemiesAvailableSpawns), "npc_zombine")
+		end
+	end
 
 end
-
-
-end
+---------------------  WAVES ---------------------
 
 
 
 function AddonCycleLong()
-local randompl = d
 --PrintMessage(HUD_PRINTTALK, "AddonCycleLong")
 timer.Create( "AddonCycleLong", 40, 1, AddonCycleLong)
---timer.Simple(20, AddonCycleLong )
-if CountEntity("npc_combine_s") > 1 then
-randompl = table.Random(ents.FindByClass("npc_combine_s"))
--- table.Random(ents.FindByClass("npc_metropolice")) table.Random(ents.FindByClass("npc_hunter")) table.Random(ents.FindByClass("npc_turret_floor"))
-else
-randompl = table.Random(ents.FindByClass("player"))
-end
---PrintMessage(HUD_PRINTTALK, ""..randompl:GetClass().."")
-if CountEnemies() < 2 then MoreWaves() end
---PrintMessage(HUD_PRINTTALK, "EnemiesLeft: "..EnemiesLeft.."")
+
+if CountEnemies() < 2 and CountEntity("npc_antlionguard") < 1 then MoreWaves() end
 
 end
 
@@ -508,7 +547,20 @@ function CountEnemies()
 
 local	EnemiesLeft=0
 for k,zombi in pairs(ents.GetAll()) do 
-if table.HasValue(Zombies, zombi:GetClass()) or table.HasValue(Monsters, zombi:GetClass()) or table.HasValue(AmnesiaSNPCs, zombi:GetClass()) or table.HasValue(TF2BotBlue, zombi:GetClass()) or zombi:GetClass() == "npc_citizen" then
+if table.HasValue(Zombies, zombi:GetClass()) or 
+table.HasValue(Monsters, zombi:GetClass()) or
+ table.HasValue(AmnesiaSNPCs, zombi:GetClass()) or 
+ table.HasValue(TF2BotBlue, zombi:GetClass()) or 
+ zombi:GetClass() == "npc_citizen"  or 
+ zombi:GetClass() == "npc_vj_bmssold_marines" or 
+ table.HasValue(BlackMesaSNPCsZombies, zombi:GetClass()) or
+  table.HasValue(HLRenaissance1, zombi:GetClass()) or
+ table.HasValue(HLRenaissance2, zombi:GetClass()) or
+ table.HasValue(HLRenaissance3, zombi:GetClass()) or
+ table.HasValue(HLRenaissanceBosses, zombi:GetClass())
+ 
+ 
+ then
 	EnemiesLeft=EnemiesLeft+1
 	end
 end
@@ -519,10 +571,32 @@ end
 function GM:Think()
  if CurTime() > fiveseccycletime+5 then
 fiveseccycletime = CurTime()
-	for k, v in pairs(player.GetAll()) do
-		v:SendLua("playerfrags= "..v:Frags().."")
-	end
 
+	for k, v in pairs(ents.GetAll()) do
+		if v:Health() > 0 then
+		if !v:CreatedByMap() and !table.HasValue(AllCombineEntities, v:GetClass()) and v:IsNPC() and !v:GetEnemy()  then
+			local randompl = {}
+		for k, v in pairs(ents.FindByClass("npc_combine_s")) do
+			table.insert(randompl,v)
+		end
+		for k, v in pairs(ents.FindByClass("player")) do
+			table.insert(randompl,v)
+		end
+		for k, v in pairs(ents.FindByClass("npc_turret_floor")) do
+			table.insert(randompl,v)
+		end
+		for k, v in pairs(ents.FindByClass("npc_rollermine")) do
+			table.insert(randompl,v)
+		end
+
+	--PrintTable(randompl)
+local selected = table.Random(randompl)
+		v:SetEnemy(selected)
+		v:SetTarget(selected)
+		v:SetSchedule( SCHED_TARGET_CHASE )
+	end
+	end
+	end
 EnemiesSelectSpawn()
 end
 
@@ -562,19 +636,12 @@ shortcycletime = CurTime()
 		 owner = ents.GetByIndex(v:GetNWString("owner"))
 
 				if v:GetNWVector("HoldPosition") != "NO_VECTOR"  then
-					if v:GetNWString("Squad") == "no" then
-						if v:GetPos():Distance(v:GetNWVector("HoldPosition")) > GetConVarNumber("squad_survival_hold_position_tolerance") and !v:IsCurrentSchedule(50) then
-							v:SetLastPosition(v:GetNWVector("HoldPosition"))
-							v:SetSchedule(SCHED_FORCED_GO_RUN)			
-						end
-					else			
-						if v:GetPos():Distance(v:GetNWVector("HoldPosition")) > GetConVarNumber("squad_survival_hold_position_tolerance") and !v:IsCurrentSchedule(50) then
-							v:SetLastPosition(v:GetNWVector("HoldPosition"))
-							v:SetSchedule(SCHED_FORCED_GO_RUN)			
-						end			
+					if v:GetPos():Distance(v:GetNWVector("HoldPosition")) > GetConVarNumber("squad_survival_hold_position_tolerance") and !v:IsCurrentSchedule(SCHED_HIDE_AND_RELOAD) and !v:IsCurrentSchedule(SCHED_FORCED_GO_RUN) then
+						v:SetLastPosition(v:GetNWVector("HoldPosition"))
+						v:SetSchedule(SCHED_FORCED_GO_RUN)			
 					end		
 		
-					if math.random(1,3) == 1 and !v:IsMoving() and !v:GetEnemy() then v:SetSchedule(SCHED_ALERT_SCAN) end
+				if math.random(1,3) == 1 and !v:IsMoving() and !v:GetEnemy() then v:SetSchedule(SCHED_ALERT_SCAN) end
 				end		
 				if v:GetNWString("FollowMe") != "no" then
 				owner = ents.GetByIndex(v:GetNWString("owner"))
@@ -595,16 +662,10 @@ shortcycletime = CurTime()
 end
 end
 
+	for k, v in pairs(player.GetAll()) do
+		v:SendLua("playerfrags= "..v:Frags().."")
+		v:SendLua("totalcombinenumber="..CountPlayerCombine(v:EntIndex()).."")
 
-if !v:CreatedByMap() and !table.HasValue(AllCombineEntities, v:GetClass()) and v:IsNPC() and !v:GetEnemy() and !v:IsMoving() then
-		if CountEntity("npc_combine_s") > 0 then
-			if math.random(1,3) == 1 then randompl = table.Random(ents.FindByClass("player")) else randompl = table.Random(ents.FindByClass("npc_combine_s")) end
-		else
-			randompl = table.Random(ents.FindByClass("player"))
-		end
-		v:SetEnemy(randompl)
-		v:SetTarget(randompl)
-		v:SetSchedule( SCHED_TARGET_CHASE )
 	end
 	end 
 end
@@ -614,7 +675,7 @@ function AddPatrolZone(ply)
 print("added.")
 		for k, v in pairs(ents.GetAll()) do
 			if v:GetNWString("selected") == "1" and v:GetNWString("owner") == ""..ply:EntIndex().."" then
-			print(v:GetClass())
+			--print(v:GetClass())
 			if !v.patrolzones then v.patrolzones = {} end
 			table.insert(v.patrolzones, ply:GetEyeTraceNoCursor().HitPos)
 			PrintTable(v.patrolzones)
@@ -629,7 +690,7 @@ function ClearPatrolZones(ply)
 print("added.")
 		for k, v in pairs(ents.GetAll()) do
 			if v:GetNWString("selected") == "1" and v:GetNWString("owner") == ""..ply:EntIndex().."" then
-			print(v:GetClass())
+			--print(v:GetClass())
 			table.Empty(v.patrolzones)
 			 v.patrol = 0
 			end
@@ -638,19 +699,6 @@ print("added.")
 end
 
 
-function Patrol(ply)
-print("added.")
-		for k, v in pairs(ents.GetAll()) do
-			if v:GetNWString("selected") == "1" and v:GetNWString("owner") == ""..ply:EntIndex().."" then
-			/*
-			print(v:GetClass())
-			v:SetLastPosition(table.Random(v.patrolzones))
-			v:SetSchedule(SCHED_FORCED_GO)
-			*/
-			end
-		end
-
-end
 --- Squad 2
 net.Receive( "regroupsquad2", function( length, client )
 client:EmitSound(table.Random(CombineChat_Regroup), 75, 100)
@@ -748,7 +796,7 @@ CanTalk=1
 			v:SetNWString("FollowMe","no")
 			v:Fire("SetTrack", "HeliTrack")
 			--v:Remove()
-			print(creating:GetName())
+			--print(creating:GetName())
 			--timer.Simple(0.5,function() creating:Remove() end)
 			end
 		if table.HasValue(CombineSoldiers, v:GetClass()) then
@@ -893,7 +941,7 @@ CanTalk=1
 			v:SetNWString("FollowMe","no")
 			v:Fire("SetTrack", "HeliTrack")
 			--v:Remove()
-			print(creating:GetName())
+			--print(creating:GetName())
 			--timer.Simple(0.5,function() creating:Remove() end)
 			end
 			if table.HasValue(CombineSoldiers, v:GetClass()) then
@@ -1006,7 +1054,7 @@ local attack=0
 			v:Fire("SetTrack", "HeliTrack")
 			v:SetNWVector("HoldPosition","NO_VECTOR")	
 			v:SetNWString("FollowMe","no")
-			print(creating:GetName())
+			--print(creating:GetName())
 			--timer.Simple(0.5,function() creating:Remove() end)
 			end
 	/*
@@ -1105,7 +1153,7 @@ local info=ply:GetEyeTraceNoCursor()
 	if ply:KeyPressed(IN_ATTACK2) then
 	if ply:OnGround() then
 		ply:PrintMessage(HUD_PRINTTALK, "Commander mode.")
-		ply:PrintMessage(HUD_PRINTTALK, "Select your troops using right click.")
+		ply:SendLua("notification.AddProgress('commander','Select your troops using right click.')")
 		local canspawn=1
 		table.foreach(ents.GetAll(), function(key,player)
 			if player:GetNWString("side") == "rebel" then
@@ -1137,19 +1185,87 @@ local info=ply:GetEyeTraceNoCursor()
 			ply:Spawn()
 			ply:AddFrags(-10)
 			ply:SendLua("DeductPoints()")
+			ply:SendLua("notification.Kill('commander')")
+
 			elseif CountPlayerCombineSoldier(ply:EntIndex()) > 0 then  ply:SendLua("notification.AddLegacy('You need at least 10 points to respawn. Wait for your soldiers to gather these points.',    NOTIFY_ERROR   , 5 )")
 			else
 			ply:UnSpectate()
 			ply:Spawn()
+			ply:SetFrags(0)
 			end
 	end
 end
 
 
+
+function spritetest()
+		for k, v in pairs(ents.FindByClass("npc_combine_s")) do
+
+		/*	local sprite = ents.Create( "env_sprite" )
+			sprite:SetPos(player.GetByID(1):GetEyeTraceNoCursor().HitPos)
+			sprite:SetColor( Color( 247,255,3 ) )
+			sprite:SetKeyValue( "model", "sprites/light_glow01.vmt" )
+			sprite:SetKeyValue( "scale", 0.50 )
+			sprite:SetKeyValue( "rendermode", 5 )
+			sprite:SetKeyValue( "renderfx", 7 )
+			sprite:Spawn()
+			sprite:Activate()
+			sprite:SetName("ZoneReveal")
+			PrintMessage(HUD_PRINTTALK, sprite:GetName())*/
+			
+		local	Shine = ents.Create("env_sprite")
+Shine:SetPos(v:GetPos())
+Shine:SetKeyValue("renderfx", "0")
+Shine:SetKeyValue("rendermode", "5")
+Shine:SetKeyValue("renderamt", "255")
+Shine:SetKeyValue("rendercolor", "255 150 80")
+Shine:SetKeyValue("framerate12", "20")
+Shine:SetKeyValue("model", "light_glow03.spr")
+Shine:SetKeyValue("scale", "0.3")
+Shine:SetKeyValue("GlowProxySize", "130")
+--Shine:SetParent(self.Entity)
+Shine:Spawn()
+Shine:Activate()
+end
+end
+function ShowPatrols(owner)
+PrintMessage(HUD_PRINTTALK, "SHOW PATROLS")
+		for k, v in pairs(ents.GetAll()) do
+		if table.HasValue(CombineSoldiers, v:GetClass()) then
+		if v:Health() > 0 and v:GetNWString("owner") == ""..owner:EntIndex().."" and v.patrol == 1 then
+		
+			--for k, patrolzone in pairs(v.patrolzones) do 
+			local sprite = ents.Create( "env_sprite" )
+			sprite:SetPos(Vector(0,0,0))
+			sprite:SetColor( Color( 247,255,3 ) )
+			sprite:SetKeyValue( "model", "sprites/light_glow01.vmt" )
+			sprite:SetKeyValue( "scale", 0.50 )
+			sprite:SetKeyValue( "rendermode", 5 )
+			sprite:SetKeyValue( "renderfx", 7 )
+			sprite:Spawn()
+			sprite:Activate()
+			sprite:SetName("ZoneReveal")
+				PrintMessage(HUD_PRINTTALK, sprite:GetName())
+		--	end
+		
+		
+		end
+		end
+		end
+end
+
+
+function HidePatrols()
+	for k, v in pairs(ents.FindByName("ZoneReveal") ) do
+				PrintMessage(HUD_PRINTTALK, "ONE ZONE LESS")
+
+		v:Remove()
+	end
+end
+
 function GM:KeyPress(ply,key)
 local info=ply:GetEyeTraceNoCursor()
 	if key == IN_USE then
-
 		if table.HasValue(AllCombineEntities, info.Entity:GetClass()) and info.Entity:GetNWString("owner") == "none" or info.Entity:GetNWString("owner") == ""..ply:EntIndex()..""
 			then
 			ply:SendLua("totalcombinenumber="..CountPlayerCombine(ply:EntIndex()).."")
@@ -1157,14 +1273,17 @@ local info=ply:GetEyeTraceNoCursor()
 			--print(info.Entity:GetClass())
 			--print(GetNWString("selected"))
 			if info.Entity:GetNWString("selected") == "0" then	
+				--ShowPatrols(ply)
+
 			--ply:EmitSound(table.Random(CombineChat_Select), 75, 100)
 			if !info.Entity:GetEnemy() and CanTalk==1 then  info.Entity:EmitSound(table.Random(CombineChat_Idle), 75, 100) CanTalk=0 timer.Simple(1,function() CanTalk=1 end) end
 
 			info.Entity:SetNWString("selected","1")
 			info.Entity:SetNWString("owner",""..ply:EntIndex().."")
 		--	info.Entity:SetKeyValue("squadname", ""..ply:EntIndex().."")
-			print(""..ply:EntIndex().."")
-			elseif info.Entity:GetNWString("selected") == "1" then		
+			--print(""..ply:EntIndex().."")
+			elseif info.Entity:GetNWString("selected") == "1" then	
+			--HidePatrols()
 			info.Entity:SetNWString("selected","0")
 			end
 		end
@@ -1226,6 +1345,8 @@ function UpdateRelationships()
 print("UpdateRelationships")
 table.foreach(ents.GetAll(), function(key,npc)
 	if table.HasValue(AllCombineEntities, npc:GetClass()) and npc:GetClass() != "combine_hoppermine"then
+	
+	
 		table.foreach(TF2BotBlueEnemies, function(key,value)
 			if 1==1  then
 				npc:AddRelationship( ""..value.." D_HT 99" )
@@ -1234,6 +1355,12 @@ table.foreach(ents.GetAll(), function(key,npc)
 		end)
 		
 		table.foreach(AmnesiaSNPCs, function(key,value)
+			if 1==1  then
+				npc:AddRelationship( ""..value.." D_HT 99" )
+				--value:AddRelationship( ""..npc:GetClass().." D_HT 99" )
+			end	
+		end)
+		table.foreach(NoMoreRoomInHell, function(key,value)
 			if 1==1  then
 				npc:AddRelationship( ""..value.." D_HT 99" )
 				--value:AddRelationship( ""..npc:GetClass().." D_HT 99" )
@@ -1248,7 +1375,12 @@ table.foreach(ents.GetAll(), function(key,npc)
 				npc:AddEntityRelationship( value, D_HT, 99 )
 			end	
 		end)
-		
+		--table.foreach(AmnesiaSNPCs, function(key,value)
+			if npc:GetClass() == "npc_vj_bmssold_marines"  then
+				npc:AddRelationship( ""..value.." D_HT 99" )
+				--value:AddRelationship( ""..npc:GetClass().." D_HT 99" )
+			end	
+		--end)		
 		
 	end
 --
@@ -1401,7 +1533,6 @@ if ply:Frags() >= 10 then
 end
 
 function SpawnMetropolice( pos, owner )
-print("ddd")
 local ply = ents.GetByIndex(tonumber(owner))
 if ply:Frags() >= 10 then
 	NPC = ents.Create( "npc_metropolice" )
@@ -1613,9 +1744,11 @@ function SpawnBasicNPC( pos,npc )
 	NPC = ents.Create( ""..npc.."" )
 	NPC:SetPos( pos )
 	NPC:Spawn()
-	print("Spawned"..npc.."")
-
+	--PrintMessage(HUD_PRINTTALK, "Spawned"..npc.."") 
+	--print()
 	--NPC:SetHealth("9000")
+	if NPC:GetClass() == "npc_vj_bmssold_marines" then NPC:Give("weapon_vj_m16a1") end
+
 end
 
 
@@ -1791,11 +1924,16 @@ configfound=0
 end
 
 function GM:EntityTakeDamage(damaged,damage)
+damage:ScaleDamage(1)
 if damaged:IsNPC() and !damaged:GetEnemy() then damage:AddDamage(50) end
 if damaged:Health() < 0 and damage:IsDamageType(64) then damaged:Remove() end
 if damage:GetAttacker():GetClass() == "npc_headcrab_black" or damage:GetAttacker():GetClass() == "npc_headcrab_poison" then damage:ScaleDamage(1) else damage:ScaleDamage(GetConVarNumber("squad_survival_damage_multiplier")) end
 
-
+if damaged:IsPlayer() then 
+if damaged.huntedready == 1 then
+damage:ScaleDamage(0)
+end
+end
 
 if table.HasValue(AllCombineEntities, damaged:GetClass()) then 
 if damaged:GetClass() == "npc_sniper" then
@@ -1840,7 +1978,7 @@ if ent1:GetClass() == "npc_combine_s" or ent1:GetNWString("name") == "TheDocumen
 			 owner = ents.GetByIndex(tonumber(ent2:GetNWString("owner")))
 			 ent1:Remove()
 			end
-			print(owner:GetName())
+			--print(owner:GetName())
 			FindTheDocumentsWin(owner)
 		end
 	end
@@ -1866,6 +2004,38 @@ end
 end
 	
 function GM:InitPostEntity()
+--- ADDON SUPPORT
+
+	table.foreach(engine.GetAddons(), function(key,addon) 
+		if addon.wsid == "352877666"  and addon.mounted == true then
+		table.insert(SquadSurvivalWaves, TF2BotBlueWave)
+		end
+		if addon.wsid == "173344427"  and addon.mounted == true then 
+		table.insert(SquadSurvivalWaves, BlackMesaSNPCsZombiesWave)
+		table.insert(SquadSurvivalWaves, BlackMesaSNPCsMarinesWave)
+		end
+		if addon.wsid == "160134938"  and addon.mounted == true then 
+		table.insert(SquadSurvivalWaves, AmnesiaWave)
+		end
+		if addon.wsid == "125988781"  and addon.mounted == true then 
+		table.insert(SquadSurvivalWaves, hlrenaissance1)
+		table.insert(SquadSurvivalWaves, hlrenaissance2)
+		table.insert(SquadSurvivalWaves, hlrenaissance3)
+		table.insert(SquadSurvivalWaves, hlrenaissanceboss)
+		end
+
+		if addon.wsid == "221942657"  and addon.mounted == true then 
+		table.insert(SquadSurvivalWaves, NoMoreRoomInHellWave)
+		end
+		if addon.wsid == "152529683"  and addon.mounted == true then 
+		table.insert(SquadSurvivalWaves, DrVrejZombiesWave)
+		end
+		if addon.wsid == "144564818"  and addon.mounted == true then 
+		table.insert(SquadSurvivalWaves, DivineCybermancyWave)
+		end
+	end)
+--- ADDON SUPPORT
+
 if !combinespawnzones then
 print("No combine spawnzones found!")
 combinespawnzones = {}
@@ -1891,16 +2061,26 @@ fiveseccycletime = CurTime()+10
 shortcycletime = CurTime()+10
 CanTalk=1
 canistersavailable=1
- 
- RunConsoleCommand( "g_helicopter_chargetime", "2") 
+
+RunConsoleCommand( "g_helicopter_chargetime", "2") 
 RunConsoleCommand( "sk_helicopter_burstcount", "20") 
 RunConsoleCommand( "sk_helicopter_firingcone", "3") 
 RunConsoleCommand( "sk_helicopter_roundsperburst", "5") 
- MapSetup()
-
+MapSetup()
 end
 
 function GM:OnNPCKilled(victim, killer, weapon)
+local points = 1
+if victim:GetMaxHealth() > 50 then points = 2 end
+if victim:GetMaxHealth() > 100 then points = 5 end
+if victim:GetMaxHealth() > 200 then points = 20 end
+if victim:GetMaxHealth() > 500 then points = 100 end
+if victim:GetMaxHealth() > 750 then points = 200 end
+if victim:GetMaxHealth() > 1000 then points = 500 end
+if  table.HasValue(BlackMesaSNPCsZombies, victim:GetClass())  or  table.HasValue(Zombies, victim:GetClass()) or victim:GetClass() == "npc_headcrab_black" or victim:GetClass() == "npc_headcrab_poison" then points = 1 end
+
+
+
 if victim:GetClass() == "npc_turret_floor" then return true end
 if victim:GetClass() == "npc_manhack" or killer:GetClass() == "npc_manhack" then return true end
 		if killer:IsPlayer() or killer:IsNPC() then
@@ -1963,7 +2143,7 @@ if table.HasValue(AllCombineEntities, killer:GetClass()) or killer:GetClass() ==
  
  if killer:GetNWString("owner") then
 	local owner = ents.GetByIndex(tonumber(killer:GetNWString("owner")))
-	owner:AddFrags(1)  owner:SendLua("AddPoints()")
+	owner:AddFrags(points)  owner:SendLua("AddPoints()")
 
  end
  end
@@ -1974,9 +2154,7 @@ if table.HasValue(AllCombineEntities, killer:GetClass()) or killer:GetClass() ==
  end
  
 if killer:IsPlayer() and !table.HasValue(AllCombineEntities, victim:GetClass()) then
-
-
-killer:AddFrags(1) killer:SendLua("AddPoints()")
+killer:AddFrags(points) killer:SendLua("AddPoints()")
 end
 
 if killer:GetNWString("side") == "rebel" then
@@ -2204,9 +2382,19 @@ end
 function MortarCheck()
 local targets = {}
 	table.foreach(ents.GetAll(), function(key,ent)
-		if (!table.HasValue(AllCombineEntities, ent:GetClass()) and ent:IsNPC()) or (ent:IsPlayer() and ent:GetNWString("side") == "rebel") or (table.HasValue(TF2BotBlueEnemies, ent:GetClass())) then if (ent:OnGround() and ent:Health() > 50) then
+		if (!table.HasValue(AllCombineEntities, ent:GetClass()) and 
+		ent:IsNPC()) or (ent:IsPlayer() and ent:GetNWString("side") == "rebel") or 
+		(table.HasValue(TF2BotBlueEnemies, ent:GetClass())) or
+		(table.HasValue(HLRenaissance1, ent:GetClass())) or
+		(table.HasValue(HLRenaissance2, ent:GetClass())) or
+		(table.HasValue(HLRenaissance3, ent:GetClass())) or
+		(table.HasValue(HLRenaissanceBosses, ent:GetClass())) or
+		(table.HasValue(AmnesiaSNPCs, ent:GetClass())) then
+
+		if (ent:OnGround() and ent:Health() > 50) then
 			table.insert(targets,ent)
-		end end
+		end
+		end
 	end)
 	if table.Count(targets) > 0 then
 		return table.Random(targets)	
@@ -2309,7 +2497,7 @@ function PropBreak(breaker,prop)
 				for k, v in pairs(breaker:GetWeapons()) do
 					SpawnItem(v:GetClass(),prop:GetPos(),Angle(0,0,0))
 				end
-				if breaker:Health() < 75 then SpawnItem("item_healthkit",prop:GetPos(),Angle(0,0,0)) end
+				SpawnItem("item_healthkit",prop:GetPos(),Angle(0,0,0))
 		end
 end
 
@@ -2317,21 +2505,7 @@ end
 hook.Add("PropBreak","OnPropBreak",PropBreak)
 
 
-function GM:PlayerCanPickupWeapon(ply, wep)
-if ply.huntedready == 1 then return false 
-end
 
-return true
-end
-
-function GM:AllowPlayerPickup(ply,ent) 
-if ent:GetNWString("name") == "TheDocument" then
-ent:Remove()
-local player = ply
-FindTheDocumentsWin(player)
-end
-return true
-end
 function FindTheDocumentsWin(ply)
 for k, v in pairs(player.GetAll()) do
 		v:SendLua("notification.AddLegacy('"..ply:GetName().." has found the document.',    NOTIFY_ERROR   , 5 )")
@@ -2347,7 +2521,7 @@ function Minimode_FindTheDocuments()
 
 
 CanSpawnCombine=0
-print("executed")
+--print("executed")
 FindTheDocuments_Table = {}
 if ITEMPLACES then 
 for k, v in pairs(ITEMPLACES) do
@@ -2358,7 +2532,7 @@ end
 	for k, v in pairs(ents.GetAll()) do
 		if table.HasValue(FindTheDocuments_Models, v:GetModel()) then
 			table.insert(FindTheDocuments_Table, v:GetPos()+Vector(0,0,20))
-			print(v:GetModel())
+			--print(v:GetModel())
 		end
 	end
 	if table.Count(FindTheDocuments_Table) > 0 then

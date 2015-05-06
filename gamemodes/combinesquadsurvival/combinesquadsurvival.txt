@@ -57,29 +57,13 @@
 		}
 		7
 		{
-			"name"		"squad_survival_orders_key"
-			"text"		"Orders Key"
-			"help"		""
-			"type"		"Numeric"
-			"default"	"KEY_Q"
-		}
-		8
-		{
-			"name"		"squad_survival_highlight_key"
-			"text"		"Highlight Units key"
-			"help"		""
-			"type"		"Numeric"
-			"default"	"KEY_X"
-		}
-		9
-		{
 			"name"		"squad_survival_hlrenaissance"
 			"text"		"HL Renaissance NPCs"
 			"help"		""
 			"type"		"CheckBox"
 			"default"	"0"
 		}
-		10
+		8
 		{
 			"name"		"squad_survival_think_cycle"
 			"text"		"Think cycle time"
@@ -87,7 +71,7 @@
 			"type"		"Numeric"
 			"default"	"2"
 		}
-		11
+		9
 		{
 			"name"		"squad_survival_player_loadout"
 			"text"		"Player loadout"
@@ -95,7 +79,7 @@
 			"type"		"Text"
 			"default"	"weapon_shotgun,weapon_ar2,weapon_frag"
 		}
-		12
+		10
 		{
 			"name"		"squad_survival_elite_model"
 			"text"		"Combine Elite model"
@@ -103,7 +87,7 @@
 			"type"		"Text"
 			"default"	"models/Combine_Super_Soldier.mdl"
 		}
-		13
+		11
 		{
 			"name"		"squad_survival_soldier_model"
 			"text"		"Combine Soldier model"
@@ -111,7 +95,7 @@
 			"type"		"Text"
 			"default"	"models/Combine_Soldier.mdl"
 		}
-		14
+		12
 		{
 			"name"		"squad_survival_shotgunner_model"
 			"text"		"Combine Shotgunner model"
@@ -119,7 +103,7 @@
 			"type"		"Text"
 			"default"	"models/Combine_Soldier.mdl"
 		}
-		15
+		13
 		{
 			"name"		"squad_survival_guard_model"
 			"text"		"Combine Guard model"
@@ -127,7 +111,7 @@
 			"type"		"Text"
 			"default"	"models/Combine_Soldier_PrisonGuard.mdl"
 		}
-		16
+		14
 		{
 			"name"		"squad_survival_metrocop_model"
 			"text"		"Metrocop Model"
@@ -135,7 +119,7 @@
 			"type"		"Text"
 			"default"	"models/Police.mdl"
 		}
-		17
+		15
 		{
 			"name"		"squad_survival_starting_score"
 			"text"		"Starting Score"
@@ -143,7 +127,7 @@
 			"type"		"Numeric"
 			"default"	"50"
 		}
-		18
+		16
 		{
 			"name"		"squad_survival_combine_rappel"
 			"text"		"Combine Rappel at spawn"
