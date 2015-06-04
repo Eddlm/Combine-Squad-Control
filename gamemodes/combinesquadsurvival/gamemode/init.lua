@@ -304,7 +304,6 @@ local entities=0
 		if table.HasValue(AllCombineEntities, v:GetClass()) then
 		if v:Health() > 0 and v:GetNWString("owner") == ""..owner.."" then
 			entities=entities+1
-			--print(v:GetClass())
 		end
 		end
 		end
@@ -567,8 +566,9 @@ end
 return EnemiesLeft
 end
 
-
+fiveseccycletime=0
 function GM:Think()
+--print("1")
  if CurTime() > fiveseccycletime+5 then
 fiveseccycletime = CurTime()
 
@@ -602,6 +602,7 @@ end
 
  if CurTime() > shortcycletime+GetConVarNumber("squad_survival_think_cycle") then
 shortcycletime = CurTime()
+print("NPC Think")
 
 	for k, v in pairs(ents.FindByClass("path_track")) do
 		v:Remove()
@@ -632,6 +633,7 @@ shortcycletime = CurTime()
 				v:Fire("SetTrack", "HeliTrack")	
 			end	
 		end
+		
 		if table.HasValue(CombineSoldiers, v:GetClass())  and !v:CreatedByMap() then
 		 owner = ents.GetByIndex(v:GetNWString("owner"))
 
@@ -662,12 +664,14 @@ shortcycletime = CurTime()
 end
 end
 
+
+	end 
 	for k, v in pairs(player.GetAll()) do
 		v:SendLua("playerfrags= "..v:Frags().."")
-		v:SendLua("totalcombinenumber="..CountPlayerCombine(v:EntIndex()).."")
+		local d = CountPlayerCombine(v:EntIndex())
+		v:SendLua("totalcombinenumber="..d.."")
 
 	end
-	end 
 end
 end
 
@@ -1340,12 +1344,12 @@ else
 end
 UpdateRelationships()
 end
+
 function UpdateRelationships()
---if CurTime() > UpdateRelationshipsCoolDown+0.5 then
+	--PrintMessage(HUD_PRINTTALK, "UpdateRelationships")
 print("UpdateRelationships")
 table.foreach(ents.GetAll(), function(key,npc)
 	if table.HasValue(AllCombineEntities, npc:GetClass()) and npc:GetClass() != "combine_hoppermine"then
-	
 	
 		table.foreach(TF2BotBlueEnemies, function(key,value)
 			if 1==1  then
@@ -1384,14 +1388,16 @@ table.foreach(ents.GetAll(), function(key,npc)
 		
 	end
 --
-	if table.HasValue(TF2BotBlueEnemies, npc:GetClass()) or table.HasValue(AmnesiaSNPCs, npc:GetClass()) then
-	/*	table.foreach(AllCombineEntities, function(key,value)
-			if 1==1  then
-				npc:AddRelationship( ""..value.." D_HT 99" )
-				--value:AddRelationship( ""..npc:GetClass().." D_HT 99" )
-			end	
-		end) */
-		end
+	
+--	if table.HasValue(TF2BotBlueEnemies, npc:GetClass()) or table.HasValue(AmnesiaSNPCs, npc:GetClass()) then
+--		table.foreach(AllCombineEntities, function(key,value)
+--			if 1==1  then
+--				npc:AddRelationship( ""..value.." D_HT 99" )
+--				--value:AddRelationship( ""..npc:GetClass().." D_HT 99" )
+--			end	
+--		end)
+--		end
+		
 --
 	if npc:GetClass() == "npc_citizen" then
 		table.foreach(player.GetAll(), function(key,value)
@@ -1405,9 +1411,6 @@ table.foreach(ents.GetAll(), function(key,npc)
 		end)
 	end
 end)
---UpdateRelationshipsCoolDown=CurTime()
---end
-
 
 end
 
@@ -1446,10 +1449,11 @@ elseif entity:IsNPC() then
 	if entity:GetClass() == "npc_headcrab" then entity:SetName("Headcrab") end
 	entity:AddRelationship( "player D_HT 20" )
 	entity:SetCollisionGroup(3)
+		UpdateRelationships()	
 
 	end
 	EnemyCountHUD()
-	UpdateRelationships()	
+
 	--if entity:GetClass() == "instanced_scripted_scene" or entity:GetClass() == "info_target_command_point" or entity:GetClass() == "ally_speech_manager" then entity:Remove() end
 	--print(table.Count(ents.FindByClass("instanced_scripted_scene")))
 end
