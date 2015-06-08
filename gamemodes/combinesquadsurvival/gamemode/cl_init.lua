@@ -1,7 +1,7 @@
 AddCSLuaFile( "shared.lua" )
 include( "shared.lua" )
 
-
+singleplayer=true
 darkencolor = Color(255,0,0)
 HUDTEXT = "Hidden"
 HUDCOLOR = Color(0,255,0)
@@ -86,30 +86,31 @@ net.Receive( "PlayerKillNotice", function( len, ply )
 	GAMEMODE:AddDeathNotice(net.ReadString(), 0, net.ReadString(), net.ReadString(), 1001)
 end)
 
---GetConVarNumber("css_ddd")
+
 hook.Add( "PreDrawHalos", "AddHalos", function()
 if LocalPlayer():GetNWString("side") == "combine" then
+if singleplayer==true then
 
 	if LocalPlayer() and LocalPlayer():GetPos()  then
 		for k, v in pairs(ents.GetAll()) do
 			if v:GetNWString("name") == "TheDocument" and ( LocalPlayer():GetPos():Distance( v:GetPos() ) ) < 300  then halo.Add( {v}, Color( 255,255,255 ), 1, 1, 1, true, true ) end
 			if table.HasValue(AllCombineEntities, v:GetClass())  then
 
-				if v:GetNWString("selected") == "1" and v:GetNWString("owner") == tostring(localownerid) then
+				if v:GetNWString("selected") == "1" then
 						halo.Add( {v}, Color( 255,255,255 ), 1, 1, 1, true, true )
-				elseif v:GetNWString("Squad") == "squad1" and v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown(GetConVarNumber("css_highlight")) then
+				elseif v:GetNWString("Squad") == "squad1"  and input.IsKeyDown(GetConVarNumber("css_highlight")) then
 						halo.Add( {v}, Color( 150,0,0 ), 1, 1, 1, true, true )
 						
-				elseif v:GetNWString("Squad") == "squad2" and v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown(GetConVarNumber("css_highlight")) then
+				elseif v:GetNWString("Squad") == "squad2" and input.IsKeyDown(GetConVarNumber("css_highlight")) then
 						halo.Add( {v}, Color( 0,0,150 ), 1, 1, 1, true, true )
 						
-				elseif v:GetNWString("owner") == tostring(localownerid) and input.IsKeyDown( GetConVarNumber("css_highlight")) then
+				elseif input.IsKeyDown( GetConVarNumber("css_highlight")) then
 						halo.Add( {v}, Color( 100,100,100 ), 1, 1, 1, true, true )				
 				end
 			end
 		end
 	end
-
+end
 else		
 		for k, v in pairs(ents.FindInSphere(LocalPlayer():GetEyeTraceNoCursor().HitPos, 500)) do
 			if table.HasValue(AllCombineEntities, v:GetClass()) then
@@ -227,8 +228,9 @@ draw.DrawText( "Automatic waves: !hordes, !stop", "TargetID", ScrW()*0.25+5, lin
 end
 
 end)
-
+canshowmenus=0
 hook.Add("Tick", "KeyDown_Test", function()
+if canshowmenus== 1 then
 if LocalPlayer():GetNWString("side") == "combine" then
 
 if input.IsKeyDown(GetConVarNumber("css_orders")) then
@@ -294,6 +296,7 @@ canshow=1
 			ClearZoneSelected:SetVisible(false)
 			RequestAmmo:SetVisible(false)
 	end
+end
 end
 end)
 
@@ -742,7 +745,7 @@ local font = "TargetID"
 	local x = MouseX - w / 2
 	draw.SimpleText( text, font, x, y, self:GetTeamColor( trace.Entity ) )
 	
-	if (trace.Entity:GetNWString("owner") == ""..localownerid.."") and table.HasValue(CombineSoldiers, trace.Entity:GetClass()) then
+	if table.HasValue(CombineSoldiers, trace.Entity:GetClass()) then
 	-- Squad
 	y = y + h + 5
 	if (trace.Entity:GetNWString("Squad") == "no") then

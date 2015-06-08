@@ -304,6 +304,7 @@ local entities=0
 		if table.HasValue(AllCombineEntities, v:GetClass()) then
 		if v:Health() > 0 and v:GetNWString("owner") == ""..owner.."" then
 			entities=entities+1
+			--print(v:GetClass())
 		end
 		end
 		end
@@ -566,9 +567,8 @@ end
 return EnemiesLeft
 end
 
-fiveseccycletime=0
+
 function GM:Think()
---print("1")
  if CurTime() > fiveseccycletime+5 then
 fiveseccycletime = CurTime()
 
@@ -602,7 +602,6 @@ end
 
  if CurTime() > shortcycletime+GetConVarNumber("squad_survival_think_cycle") then
 shortcycletime = CurTime()
-print("NPC Think")
 
 	for k, v in pairs(ents.FindByClass("path_track")) do
 		v:Remove()
@@ -633,11 +632,10 @@ print("NPC Think")
 				v:Fire("SetTrack", "HeliTrack")	
 			end	
 		end
-		
 		if table.HasValue(CombineSoldiers, v:GetClass())  and !v:CreatedByMap() then
 		 owner = ents.GetByIndex(v:GetNWString("owner"))
 
-				if v:GetNWVector("HoldPosition") != "NO_VECTOR"  then
+				if v:GetNWVector("HoldPosition") != "NO_VECTOR" and v:GetNWVector("HoldPosition") != Vector(0,0,0) then
 					if v:GetPos():Distance(v:GetNWVector("HoldPosition")) > GetConVarNumber("squad_survival_hold_position_tolerance") and !v:IsCurrentSchedule(SCHED_HIDE_AND_RELOAD) and !v:IsCurrentSchedule(SCHED_FORCED_GO_RUN) then
 						v:SetLastPosition(v:GetNWVector("HoldPosition"))
 						v:SetSchedule(SCHED_FORCED_GO_RUN)			
@@ -668,11 +666,9 @@ end
 	end 
 	for k, v in pairs(player.GetAll()) do
 		v:SendLua("playerfrags= "..v:Frags().."")
-		local d = CountPlayerCombine(v:EntIndex())
-		v:SendLua("totalcombinenumber="..d.."")
-
+		v:SendLua("totalcombinenumber="..CountPlayerCombine(v:EntIndex()).."")
 	end
-end
+	end
 end
 
 function AddPatrolZone(ply)
@@ -1343,13 +1339,22 @@ else
 	
 end
 UpdateRelationships()
+if NUMPLAYERS() > 1 then
+	table.foreach(player.GetAll(), function(key,ply)
+	ply:SendLua("singleplayer=false")
+	end)
+	else
+		table.foreach(player.GetAll(), function(key,ply)
+	ply:SendLua("singleplayer=true")
+	end)
 end
-
+end
 function UpdateRelationships()
-	--PrintMessage(HUD_PRINTTALK, "UpdateRelationships")
+--if CurTime() > UpdateRelationshipsCoolDown+0.5 then
 print("UpdateRelationships")
 table.foreach(ents.GetAll(), function(key,npc)
 	if table.HasValue(AllCombineEntities, npc:GetClass()) and npc:GetClass() != "combine_hoppermine"then
+	
 	
 		table.foreach(TF2BotBlueEnemies, function(key,value)
 			if 1==1  then
@@ -1388,16 +1393,14 @@ table.foreach(ents.GetAll(), function(key,npc)
 		
 	end
 --
-	
---	if table.HasValue(TF2BotBlueEnemies, npc:GetClass()) or table.HasValue(AmnesiaSNPCs, npc:GetClass()) then
---		table.foreach(AllCombineEntities, function(key,value)
---			if 1==1  then
---				npc:AddRelationship( ""..value.." D_HT 99" )
---				--value:AddRelationship( ""..npc:GetClass().." D_HT 99" )
---			end	
---		end)
---		end
-		
+	if table.HasValue(TF2BotBlueEnemies, npc:GetClass()) or table.HasValue(AmnesiaSNPCs, npc:GetClass()) then
+	/*	table.foreach(AllCombineEntities, function(key,value)
+			if 1==1  then
+				npc:AddRelationship( ""..value.." D_HT 99" )
+				--value:AddRelationship( ""..npc:GetClass().." D_HT 99" )
+			end	
+		end) */
+		end
 --
 	if npc:GetClass() == "npc_citizen" then
 		table.foreach(player.GetAll(), function(key,value)
@@ -1411,6 +1414,9 @@ table.foreach(ents.GetAll(), function(key,npc)
 		end)
 	end
 end)
+--UpdateRelationshipsCoolDown=CurTime()
+--end
+
 
 end
 
@@ -1449,11 +1455,10 @@ elseif entity:IsNPC() then
 	if entity:GetClass() == "npc_headcrab" then entity:SetName("Headcrab") end
 	entity:AddRelationship( "player D_HT 20" )
 	entity:SetCollisionGroup(3)
-		UpdateRelationships()	
 
 	end
 	EnemyCountHUD()
-
+	UpdateRelationships()	
 	--if entity:GetClass() == "instanced_scripted_scene" or entity:GetClass() == "info_target_command_point" or entity:GetClass() == "ally_speech_manager" then entity:Remove() end
 	--print(table.Count(ents.FindByClass("instanced_scripted_scene")))
 end
@@ -2239,6 +2244,8 @@ ply:SetNWString("side", "combine")
 ply:SetFrags(GetConVarNumber("squad_survival_starting_score"))
 timer.Simple(3, function() ply:SendLua("CombineBootsRun()")  end)
 ply:SendLua("localownerid="..ply:EntIndex().."")
+ply:SendLua("canshowmenus=1")
+
 end
 hook.Add( "PlayerInitialSpawn", "playerInitialSpawn", FirstSpawn )
 
@@ -2551,5 +2558,10 @@ end
 	end
 end
 
-
----- Rebel Substitutes
+function NUMPLAYERS()
+	local PLAYERSINMAP=0
+	for k, v in pairs(ents.FindByClass("player")) do
+		PLAYERSINMAP=PLAYERSINMAP+1
+	end
+	return PLAYERSINMAP
+end
