@@ -44,6 +44,7 @@ ZombiesDrop = {"weapon_shotgun","weapon_smg1","weapon_frag","weapon_ar2","item_b
 CombineSoldiers = {"npc_combine_s", "npc_metropolice","npc_hunter","npc_fassassin","npc_cremator","npc_rollermine"}
 CombineHelicopters = {"npc_helicopter","npc_combinegunship","npc_combinedropship"}
 AllCombineEntities = {"npc_combine_s", "npc_metropolice","npc_hunter","npc_fassassin","npc_cremator","npc_rollermine","npc_helicopter","npc_combinegunship","npc_manhack","npc_turret_floor","npc_turret_ceiling","npc_combinedropship","npc_sniper"}
+ControllableCombineEntities = {"npc_combine_s", "npc_metropolice","npc_hunter","npc_fassassin","npc_cremator","npc_rollermine","npc_helicopter","npc_combinegunship","npc_combinedropship"}
 REBEL_WEAPONS = { "ai_weapon_crossbow","ai_weapon_smg1","ai_weapon_shotgun","ai_weapon_ar2"}
 
 Zombies = {"npc_zombie","npc_fastzombie","npc_poisonzombie","npc_zombine"}
@@ -590,11 +591,13 @@ hook.Add( "PlayerSay", "ISaid", ISaid )
 
 
 function GM:AllowPlayerPickup(ply,ent) 
+
 if ent:GetNWString("name") == "TheDocument" then
 ent:Remove()
 local player = ply
 FindTheDocumentsWin(player)
 end
+
 return true
 end
 
